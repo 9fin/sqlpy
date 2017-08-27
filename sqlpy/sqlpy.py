@@ -29,10 +29,12 @@ STRICT_BUILT_PARSE = False
 
 
 class Queries(object):
-    def __init__(self, strict_parse=False, queries=list()):
+    def __init__(self, filepath, strict_parse=False, queries=list()):
         self.available_queries = []
         if strict_parse:
             STRICT_BUILT_PARSE = True
+        for name, fn in load_queires(filepath):
+            self.add_query(name, fn)
 
     def __repr__(self):
         return "sqlpy.Queries("+self.available_queries.__repr__()+")"
