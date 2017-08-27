@@ -25,11 +25,14 @@ SELECT = 1
 INSERT_UPDATE_DELETE = 2
 SELECT_BUILT = 3
 RETURN_ID = 4
+STRICT_BUILT_PARSE = False
 
 
 class Queries(object):
-    def __init__(self, queries=list()):
+    def __init__(self, strict_parse=False, queries=list()):
         self.available_queries = []
+        if strict_parse:
+            STRICT_BUILT_PARSE = True
 
     def __repr__(self):
         return "sqlpy.Queries("+self.available_queries.__repr__()+")"
@@ -218,7 +221,8 @@ def parse_sql_entry(entry):
                         # add the args required by this line to tracker
                         query_args_set.update(parse_args(query_arr[arg_idx][key]['_q']))
                 else:
-                    raise SQLArgumentException('Named argument supplied which does not match a SQL clause', key)
+                    if STRICT_BUILT_PARSE:
+                        raise SQLArgumentException('Named argument supplied which does not match a SQL clause', key)
             # do a diff of the keys in input kwargs and query_built
             # set anything missing to None
             diff = arg_key_diff(query_args_set, set(kwargs.keys()))
