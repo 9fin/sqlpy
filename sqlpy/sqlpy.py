@@ -92,7 +92,6 @@ def parse_args(s):
     for i in range(len(arg_start)):
         if arg_end[i] - arg_start[i] < 1:
             raise SQLParseException('parse error, no argument found between (...)', s)
-            break
         out.add(s[arg_start[i]:arg_end[i]])
     return out
 
