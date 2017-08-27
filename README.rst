@@ -1,6 +1,7 @@
 =======
 SQLpy
 =======
+|pypi| |build-status| |coverage|
 
 TODO
 =======
@@ -60,3 +61,19 @@ Set up the application and run
     print output
 
     db.close()
+
+
+.. |build-status| image:: https://travis-ci.org/9fin/sqlpy.svg?branch=master
+    :alt: build status
+    :scale: 100%
+    :target: https://travis-ci.org/9fin/sqlpy
+
+.. |pypi| image:: https://img.shields.io/pypi/v/sqlpy.svg
+    :alt: Pypi Version
+    :scale: 100%
+    :target: https://pypi.python.org/pypi/sqlpy
+
+.. |coverage| image:: https://coveralls.io/repos/github/9fin/sqlpy/badge.svg?branch=master
+    :alt: Pypi Version
+    :scale: 100%
+    :target: https://coveralls.io/github/9fin/sqlpy?branch=master
