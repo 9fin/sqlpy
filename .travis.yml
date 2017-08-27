@@ -1,13 +1,11 @@
 language: python
 
-env:
-  - TOXENV=py27
-  - TOXENV=py33
-  - TOXENV=py34
-  - TOXENV=py35
-  - TOXENV=py36
+python:
+    - "2.7"
+    - "3.5"
+    - "3.6"
 
-install: pip install tox
+install: pip install tox tox-travis
 
 script: tox
 
