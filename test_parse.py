@@ -1,6 +1,7 @@
 from __future__ import print_function
 import pytest
 import os
+import sys
 import functools
 import psycopg2
 from sqlpy.sqlpy import Queries, load_queires, SQLLoadException,\
@@ -135,6 +136,10 @@ class TestQuery:
         sql = Queries(queries_file)
         assert isinstance(sql, Queries)
 
+    def test_query_repr(self, queries_file):
+        sql = Queries(queries_file)
+        assert 'sqlpy.Queries(' in sql.__repr__()
+
     def test_query_fcn(self, queries_file):
         sql = Queries(queries_file)
         assert isinstance(sql.TEST_SELECT, functools.partial)
@@ -176,8 +181,64 @@ class TestQueryTypes:
         assert fcn.args[3] == SELECT_BUILT
 
 
+@pytest.mark.skipif('TRAVIS' not in os.environ, reason="test data only in Travis")
 class TestExec:
     def test_select_1(self, db_cur, sql_select_1):
         name, fcn = parse_sql_entry(sql_select_1)
         output = fcn(db_cur, 1)
         assert output[0] == 1
+
+    def test_data1(self, db_cur, queries_file):
+        sql = Queries(queries_file)
+        data = ('BEN',)
+        output = sql.GET_ACTORS_BY_FIRST_NAME(db_cur, 1, data)
+        assert output[0] == 83
+
+    def test_data1_1(self, db_cur, queries_file):
+        sql = Queries(queries_file)
+        data = ('BEN',)
+        output = sql.GET_ACTORS_BY_FIRST_NAME(db_cur, 0, data)
+        assert len(output) == 2
+
+    def test_data2(self, db_cur, queries_file):
+        sql = Queries(queries_file)
+        data = ('Jeff', 'Goldblum', 'Jeff', 'Goldblum')
+        output = sql.INSERT_ACTOR(db_cur, 0, data)
+        assert output == ('Jeff', 'Goldblum')
+
+    def test_data3(self, db_cur, queries_file):
+        sql = Queries(queries_file)
+        kwdata = {
+            'country': 'MARS'
+        }
+        output1 = sql.INSERT_COUNTRY(db_cur, 0, **kwdata)
+        output2 = sql.DELETE_COUNTRY(db_cur, 0, **kwdata)
+        assert output1 and output2
+
+    def test_data4(self, db_cur, queries_file):
+        sql = Queries(queries_file)
+        kwdata = {
+            'countires': ['United States'],
+            'extra_name': 'BEN'
+        }
+        output = sql.CUSTOMERS_OR_STAFF_IN_COUNTRY(db_cur, 0, **kwdata)
+        assert len(output) == 37
+
+    def test_data5(self, db_cur, queries_file):
+        sql = Queries(queries_file, strict_parse=True)
+        kwdata = {
+            'countires': ['United States'],
+            'extra_name': 'BEN'
+        }
+        output = sql.CUSTOMERS_OR_STAFF_IN_COUNTRY(db_cur, 1, **kwdata)
+        assert output
+
+    def test_data6(self, db_cur, queries_file):
+        sql = Queries(queries_file)
+        kwdata = {
+            'countires': ['United States'],
+            'extra_name': 'BEN'
+        }
+        identifers = ('country',)
+        output = sql.CUSTOMERS_OR_STAFF_IN_COUNTRY_SORT(db_cur, 1, None, identifers, **kwdata)
+        assert output == ('BEN', 'EASTER', 'Russian Federation')

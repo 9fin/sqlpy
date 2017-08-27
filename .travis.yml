@@ -9,6 +9,13 @@ services:
 
 install: pip install tox tox-travis coveralls psycopg2
 
+before_install:
+  - git clone https://github.com/devrimgunduz/pagila.git
+  - cd pagila
+  - psql -h localhost -p 5432 -U postgres -f pagila-schema.sql
+  - psql -h localhost -p 5432 -U postgres -f pagila-data.sql
+
+
 script: tox
 
 after_success:
