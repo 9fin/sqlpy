@@ -254,10 +254,14 @@ def parse_sql_entry(entry):
                     results = cur.fetchall()
         return results
 
-    fn.__doc__ = doc
-    fn.__query__ = query
-    fn.func_name = name
-    return name, partial(fn, query, query_dict, query_arr, sql_type)
+    fn_partial = partial(fn, query, query_dict, query_arr, sql_type)
+
+    fn_partial.__doc__ = doc
+    fn_partial.__query__ = query
+    fn_partial.__name__ = name
+    fn_partial.func_name = name
+
+    return name, fn_partial
 
 
 def parse_queires_string(s):
