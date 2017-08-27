@@ -265,7 +265,7 @@ def parse_sql_entry(entry):
 
 
 def parse_queires_string(s):
-    return [parse_sql_entry(expression) for expression in s.split('\n\n')]
+    return [parse_sql_entry(expression.strip('\n')) for expression in s.split('\n\n') if expression]
 
 
 def load_queires(filepath):
