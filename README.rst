@@ -1,7 +1,7 @@
 =======
 SQLpy
 =======
-|pypi| |build-status| |coverage|
+|pypi| |build-status| |coverage| |versions|
 
 TODO
 =======
@@ -77,3 +77,8 @@ Set up the application and run
     :alt: Pypi Version
     :scale: 100%
     :target: https://coveralls.io/github/9fin/sqlpy?branch=master
+
+.. |versions| image:: https://img.shields.io/pypi/pyversions/sqlpy.svg
+    :alt: Python Versions
+    :scale: 100%
+    :target: https://pypi.python.org/pypi/sqlpy
