@@ -2,6 +2,7 @@ from __future__ import print_function
 import pytest
 import os
 import functools
+import psycopg2
 from sqlpy.sqlpy import Queries, load_queires, SQLLoadException,\
     SQLParseException, SQLArgumentException, parse_sql_entry, SELECT,\
     INSERT_UPDATE_DELETE, SELECT_BUILT, RETURN_ID
@@ -78,6 +79,29 @@ AND col_1 = %(val_1)s
 """.strip('\n')
 
 
+@pytest.fixture
+def sql_select_1():
+    return """
+-- name: select_1
+SELECT 1;
+""".strip('\n')
+
+
+@pytest.fixture
+def db_cur():
+    db_host = 'localhost'
+    db_port = 5432
+    db_user = 'postgres'
+    db_pass = ''
+    db = psycopg2.connect(dbname='postgres',
+                          user=db_user,
+                          password=db_pass,
+                          host=db_host,
+                          port=db_port)
+    yield db.cursor()
+    db.close()
+
+
 class TestLoad:
     def test_load(self, queries_file):
         parsed = load_queires(queries_file)
@@ -150,3 +174,10 @@ class TestQueryTypes:
     def test_type_built(self, sql_built):
         name, fcn = parse_sql_entry(sql_built)
         assert fcn.args[3] == SELECT_BUILT
+
+
+class TestExec:
+    def test_select_1(self, db_cur, sql_select_1):
+        name, fcn = parse_sql_entry(sql_select_1)
+        output = fcn(db_cur, 1)
+        assert output[0] == 1
