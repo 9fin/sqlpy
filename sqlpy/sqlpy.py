@@ -130,7 +130,7 @@ def parse_sql_entry(entry):
     name = get_fn_name(lines[0])
     doc = None
     if ' ' in name:
-        raise SQLParseException('Query name has spaces in it.')
+        raise SQLParseException('Query name has spaces in it. "{}"'.format(lines[0]))
     elif '<!>' in name:
         sql_type = RETURN_ID
         name = name.replace('<!>', '')
