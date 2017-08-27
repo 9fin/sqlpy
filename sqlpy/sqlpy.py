@@ -39,19 +39,6 @@ class Queries(object):
     def __repr__(self):
         return "sqlpy.Queries("+self.available_queries.__repr__()+")"
 
-    def init_app(self, app, sql_file):
-        '''
-        Configures a flask application.
-        Loads the sql file and prepares all the queires.
-        '''
-        app.logger.info('Configuring SQLpy for application use.')
-        app.logger.info('Loading sql queries from file: {}'.format(sql_file))
-        queries = load_queires(sql_file)
-        app.logger.info('Found {} sql queries in file: {}'.format(len(queries), sql_file))
-        for name, fn in queries:
-            self.add_query(name, fn)
-        app.queries = self
-
     def add_query(self, name, fn):
         setattr(self, name, fn)
         if name not in self.available_queries:
