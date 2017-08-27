@@ -269,8 +269,12 @@ def parse_queires_string(s):
 
 
 def load_queires(filepath):
-    if not os.path.exists(filepath):
-        raise SQLLoadException('Could not find file', filepath)
-    with open(filepath, 'rU') as queries_file:
-        f = queries_file.read()
+    if type(filepath) != list:
+        filepath = [filepath]
+    f = ''
+    for file in filepath:
+        if not os.path.exists(file):
+            raise SQLLoadException('Could not find file', file)
+        with open(file, 'rU') as queries_file:
+            f = f + '\n' + queries_file.read()
     return parse_queires_string(f)

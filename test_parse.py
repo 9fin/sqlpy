@@ -20,6 +20,10 @@ class TestParse:
         parsed = load_queires(queries_file)
         assert isinstance(parsed, list)
 
+    def test_parse_arr(self, queries_file_arr):
+        parsed = load_queires(queries_file_arr)
+        assert isinstance(parsed, list)
+
     def test_parse_name(self, queries_file):
         parsed = load_queires(queries_file)
         assert parsed[0][0] == 'TEST_SELECT'
