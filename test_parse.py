@@ -7,6 +7,13 @@ import psycopg2
 from sqlpy.sqlpy import Queries, load_queires, SQLLoadException,\
     SQLParseException, SQLArgumentException, parse_sql_entry, SELECT,\
     INSERT_UPDATE_DELETE, SELECT_BUILT, RETURN_ID
+import logging
+
+
+@pytest.fixture()
+def enable_logging():
+    logging.basicConfig(level=logging.DEBUG,
+                        format='%(asctime)s %(module)s %(levelname)s %(message)s')
 
 
 @pytest.fixture
@@ -54,6 +61,18 @@ AND col_1 = %()s
 
 
 @pytest.fixture
+def invalid_sql_built_args():
+        return """
+-- name: test_built$
+-- testing the sqlpi module pls work
+SELECT * FROM testdb
+WHERE 1=1
+AND col_1 = %(arg1)s
+AND col_2 = %(arg1)
+""".strip('\n')
+
+
+@pytest.fixture
 def sql_bang():
         return """
 -- name: test_delete!
@@ -88,7 +107,7 @@ SELECT 1;
 """.strip('\n')
 
 
-@pytest.fixture
+@pytest.fixture(scope="module")
 def db_cur():
     db_host = 'localhost'
     db_port = 5432
@@ -166,6 +185,10 @@ class TestExceptions:
         with pytest.raises(SQLParseException):
             parse_sql_entry(invalid_sql_built)
 
+    def test_parse_exception4(self, invalid_sql_built_args):
+        with pytest.raises(SQLParseException):
+            parse_sql_entry(invalid_sql_built_args)
+
 
 class TestQueryTypes:
     def test_type_bang(self, sql_bang):
@@ -182,6 +205,7 @@ class TestQueryTypes:
 
 
 @pytest.mark.skipif('TRAVIS' not in os.environ, reason="test data only in Travis")
+@pytest.mark.usefixtures("enable_logging")
 class TestExec:
     def test_select_1(self, db_cur, sql_select_1):
         name, fcn = parse_sql_entry(sql_select_1)
@@ -224,14 +248,34 @@ class TestExec:
         output = sql.CUSTOMERS_OR_STAFF_IN_COUNTRY(db_cur, 0, **kwdata)
         assert len(output) == 37
 
+    def test_data4_1(self, db_cur, queries_file):
+        sql = Queries(queries_file)
+        kwdata = {
+            'countires': ['United States'],
+            'extra_name': 'BEN',
+            'unmatched_arg_trigger': True
+        }
+        output = sql.CUSTOMERS_OR_STAFF_IN_COUNTRY(db_cur, 0, **kwdata)
+        assert len(output) == 37
+
     def test_data5(self, db_cur, queries_file):
-        sql = Queries(queries_file, strict_parse=True)
+        sql = Queries(queries_file)
         kwdata = {
             'countires': ['United States'],
             'extra_name': 'BEN'
         }
         output = sql.CUSTOMERS_OR_STAFF_IN_COUNTRY(db_cur, 1, **kwdata)
         assert output
+
+    def test_data5_1(self, db_cur, queries_file):
+        with pytest.raises(SQLArgumentException):
+            sql = Queries(queries_file, strict_parse=True)
+            kwdata = {
+                'countires': ['United States'],
+                'extra_name': 'BEN',
+                'extra_param': 'I should not be here'
+            }
+            sql.CUSTOMERS_OR_STAFF_IN_COUNTRY(db_cur, 1, **kwdata)
 
     def test_data6(self, db_cur, queries_file):
         sql = Queries(queries_file)
@@ -242,3 +286,62 @@ class TestExec:
         identifers = ('country',)
         output = sql.CUSTOMERS_OR_STAFF_IN_COUNTRY_SORT(db_cur, 1, None, identifers, **kwdata)
         assert output == ('BEN', 'EASTER', 'Russian Federation')
+
+
+@pytest.mark.skipif('TRAVIS' not in os.environ, reason="test data only in Travis")
+@pytest.mark.usefixtures("enable_logging")
+class TestExecExcept:
+    def test_data1(self, db_cur, queries_file):
+        with pytest.raises(psycopg2.Error):
+            sql = Queries(queries_file)
+            data = ('BEN',)
+            sql.GET_ACTORS_BY_FIRST_NAME_EXP(db_cur, 1, data)
+
+    def test_data1_1(self, db_cur, queries_file):
+        with pytest.raises(psycopg2.Error):
+            sql = Queries(queries_file)
+            data = ('BEN',)
+            sql.GET_ACTORS_BY_FIRST_NAME_EXP(db_cur, 0, data)
+
+    def test_data2(self, db_cur, queries_file):
+        with pytest.raises(psycopg2.Error):
+            sql = Queries(queries_file)
+            data = ('Jeff', 'Goldblum', 'Jeff', 'Goldblum')
+            sql.INSERT_ACTOR_EXP(db_cur, 0, data)
+
+    def test_data3(self, db_cur, queries_file):
+        with pytest.raises(psycopg2.Error):
+            sql = Queries(queries_file)
+            kwdata = {
+                'country': 'MARS'
+            }
+            sql.INSERT_COUNTRY_EXP(db_cur, 0, **kwdata)
+            sql.DELETE_COUNTRY_EXP(db_cur, 0, **kwdata)
+
+    def test_data4(self, db_cur, queries_file):
+        with pytest.raises(psycopg2.Error):
+            sql = Queries(queries_file)
+            kwdata = {
+                'countires': ['United States'],
+                'extra_name': 'BEN'
+            }
+            sql.CUSTOMERS_OR_STAFF_IN_COUNTRY_EXP(db_cur, 0, **kwdata)
+
+    def test_data5(self, db_cur, queries_file):
+        with pytest.raises(psycopg2.Error):
+            sql = Queries(queries_file, strict_parse=True)
+            kwdata = {
+                'countires': ['United States'],
+                'extra_name': 'BEN'
+            }
+            sql.CUSTOMERS_OR_STAFF_IN_COUNTRY_EXP(db_cur, 1, **kwdata)
+
+    def test_data6(self, db_cur, queries_file):
+        with pytest.raises(psycopg2.Error):
+            sql = Queries(queries_file)
+            kwdata = {
+                'countires': ['United States'],
+                'extra_name': 'BEN'
+            }
+            identifers = ('country',)
+            sql.CUSTOMERS_OR_STAFF_IN_COUNTRY_SORT_EXP(db_cur, 1, None, identifers, **kwdata)

@@ -32,6 +32,7 @@ class Queries(object):
     def __init__(self, filepath, strict_parse=False, queries=list()):
         self.available_queries = []
         if strict_parse:
+            global STRICT_BUILT_PARSE
             STRICT_BUILT_PARSE = True
         for name, fn in load_queires(filepath):
             self.add_query(name, fn)
@@ -71,7 +72,7 @@ def parse_args(s):
         elif c == ')' and False if ii+1 == len(s) else s[ii+1] == 's':
             # end of argument name
             arg_end.append(ii)
-        else:
+        else:  # pragma: no cover
             # just a normal )
             pass
     if len(arg_start) != len(arg_end):
