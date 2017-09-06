@@ -32,11 +32,7 @@ Set up the application and run
     import psycopg2
     import psycopg2.extras
 
-    sql = Queries()
-
-    queries = load_queires('queries.sql')
-    for name, fn in queries:
-        sql.add_query(name, fn)
+    sql = Queries('queries.sql')
 
 
     def connect_db():
