@@ -231,13 +231,13 @@ class TestExec:
     def test_select_1(self, db_cur, sql_select_1):
         name, fcn = parse_sql_entry(sql_select_1)
         output = fcn(db_cur, 1)
-        assert output[0] == 1
+        assert output[0][0] == 1
 
     def test_data1(self, db_cur, queries_file):
         sql = Queries(queries_file)
         data = ('BEN',)
         output = sql.GET_ACTORS_BY_FIRST_NAME(db_cur, 1, data)
-        assert output[0] == 83
+        assert output[0][0] == 83
 
     def test_data1_1(self, db_cur, queries_file):
         sql = Queries(queries_file)
@@ -248,8 +248,14 @@ class TestExec:
     def test_data2(self, db_cur, queries_file):
         sql = Queries(queries_file)
         data = ('Jeff', 'Goldblum', 'Jeff', 'Goldblum')
+        output = sql.INSERT_ACTOR(db_cur, 1, data)
+        assert output[0] == ('Jeff', 'Goldblum')
+
+    def test_data2_1(self, db_cur, queries_file):
+        sql = Queries(queries_file)
+        data = ('Jeff', 'Goldblum', 'Jeff', 'Goldblum')
         output = sql.INSERT_ACTOR(db_cur, 0, data)
-        assert output == ('Jeff', 'Goldblum')
+        assert output == [('Jeff', 'Goldblum')]
 
     def test_data3(self, db_cur, queries_file):
         sql = Queries(queries_file)
@@ -306,7 +312,7 @@ class TestExec:
         }
         identifers = ('country',)
         output = sql.CUSTOMERS_OR_STAFF_IN_COUNTRY_SORT(db_cur, 1, None, identifers, **kwdata)
-        assert output == ('BEN', 'EASTER', 'Russian Federation')
+        assert output[0] == ('BEN', 'EASTER', 'Russian Federation')
 
 
 @pytest.mark.skipif('TRAVIS' not in os.environ, reason="test data only in Travis")
@@ -368,13 +374,19 @@ class TestExecExcept:
             sql.CUSTOMERS_OR_STAFF_IN_COUNTRY_SORT_EXP(db_cur, 1, None, identifers, **kwdata)
 
     def test_data7(self, db_cur, queries_file):
-        with pytest.raises(SQLArgumentException, message='"fetch_n" is not an Integer >= 0'):
+        with pytest.raises(SQLArgumentException):
             sql = Queries(queries_file)
             data = ('BEN',)
             sql.GET_ACTORS_BY_FIRST_NAME(db_cur, '1', data)
 
     def test_data7_1(self, db_cur, queries_file):
-        with pytest.raises(SQLArgumentException, message='"fetch_n" is not an Integer >= 0'):
+        with pytest.raises(SQLArgumentException):
             sql = Queries(queries_file)
             data = ('BEN',)
             sql.GET_ACTORS_BY_FIRST_NAME(db_cur, '0', data)
+
+    def test_data7_2(self, db_cur, queries_file):
+        with pytest.raises(SQLArgumentException):
+            sql = Queries(queries_file)
+            data = ('BEN',)
+            sql.GET_ACTORS_BY_FIRST_NAME(db_cur, -1, data)

@@ -161,8 +161,10 @@ def parse_sql_entry(entry):
     query = '\n'.join(query)
 
     def fn(query, query_dict, query_arr, sql_type, cur, fetch_n, args=None, identifers=None, **kwargs):
-        if fetch_n or not isinstance(fetch_n, int) or fetch_n < 0:
-            raise SQLArgumentException('"fetch_n" is not an Integer >= 0')
+        if fetch_n and not isinstance(fetch_n, int):
+            raise SQLArgumentException('"fetch_n" must be an Integer >= 0')
+        if fetch_n < 0:
+            raise SQLArgumentException('"fetch_n" must be >= 0')
         module_logger.info('Executing: {}'.format(name))
         results = None
         if identifers:
@@ -178,7 +180,10 @@ def parse_sql_entry(entry):
                 module_logger.exception("Psycopg2 Error")
                 raise
             else:
-                results = cur.fetchmany(fetch_n)
+                if fetch_n:
+                    results = cur.fetchmany(fetch_n)
+                else:
+                    results = cur.fetchall()
         if sql_type == QueryType.INSERT_UPDATE_DELETE:
             try:
                 cur.execute(query, kwargs if len(kwargs) > 0 else args)
