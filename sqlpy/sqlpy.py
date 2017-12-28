@@ -101,26 +101,26 @@ def parse_args(s):
 
 
 def built_query_tuple(in_arr):
-    out_arr = []
-    out_d = {'#': []}
+    query_arr = []
+    query_dict = {'#': []}
     arg_offset = 0  # value which tracks the total offset in the array caused by multiple args in a line
     for i, line in enumerate(in_arr):
         args = parse_args(line)
         if not args:
-            out_arr.append({'#': {'idx': i+arg_offset, '_q': line}})
-            out_d['#'].append(i+arg_offset) 
+            query_arr.append({'#': {'idx': i+arg_offset, '_q': line}})
+            query_dict['#'].append(i+arg_offset) 
             continue
         if len(args) > 1:
             for arg in args:
-                out_arr.append({arg: {'idx': i+arg_offset, '_q': line}})
-                out_d[arg] = i+arg_offset
+                query_arr.append({arg: {'idx': i+arg_offset, '_q': line}})
+                query_dict[arg] = i+arg_offset
                 arg_offset += 1
             arg_offset -= 1
         else:
             arg = args.pop()
-            out_arr.append({arg: {'idx': i+arg_offset, '_q': line}})
-            out_d[arg] = i+arg_offset
-    return (out_arr, out_d)
+            query_arr.append({arg: {'idx': i+arg_offset, '_q': line}})
+            query_dict[arg] = i+arg_offset
+    return (query_arr, query_dict)
 
 
 def arg_key_diff(s1, s2):
