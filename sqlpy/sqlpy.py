@@ -63,8 +63,8 @@ class Queries(object):
 
 
 def get_fn_name(line):
-    line = line.upper()
-    return line[9:]
+    name = line.split('-- name:')[1].strip().upper()
+    return name
 
 
 def parse_args(s):
@@ -129,7 +129,7 @@ def arg_key_diff(s1, s2):
 
 def parse_sql_entry(entry):
     lines = entry.split('\n')
-    if not lines[0].startswith('-- name: '):
+    if not lines[0].startswith('-- name:'):
         raise SQLParseException('Query does not start with "-- name:": ', lines[0])
     name = get_fn_name(lines[0])
     doc = None
