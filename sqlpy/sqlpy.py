@@ -3,6 +3,7 @@ import psycopg2
 from psycopg2 import sql
 from psycopg2.extensions import quote_ident
 from functools import partial
+from itertools import takewhile
 import logging
 from errno import ENOENT
 from enum import Enum
@@ -146,7 +147,8 @@ def parse_sql_entry(entry):
         name = name.replace('$', '')
     else:
         sql_type = QueryType.SELECT
-    comments = list(line.strip('-').strip() for line in lines[1:] if line.startswith('--'))
+    # collect comments only at the start of the query block
+    comments = list(line.strip('-').strip() for line in takewhile(lambda l: l.startswith('--'), lines[1:]))
     if comments:
         doc = '\n'.join(comments)
         query = lines[len(comments)+1:]

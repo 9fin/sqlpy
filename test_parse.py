@@ -148,6 +148,14 @@ class TestLoad:
         fcn = parsed[0][1]
         assert fcn.__doc__ == 'testing the sqlpi module pls work\nsecond line comment'
 
+    def test_load_fcn_querystring_fmt(self, queries_file):
+        parsed = load_queires(queries_file)
+        fcn = parsed[0][1]
+        assert fcn.__query__ == """select *
+-- comment in middle
+from public.actor
+limit 1;"""
+
 
 class TestQuery:
     def test_query(self, queries_file):
