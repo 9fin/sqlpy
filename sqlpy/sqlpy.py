@@ -107,18 +107,18 @@ def built_query_tuple(in_arr):
     for i, line in enumerate(in_arr):
         args = parse_args(line)
         if not args:
-            query_arr.append({'#': {'idx': i+arg_offset, '_q': line}})
+            query_arr.append({'#': {'idx': i+arg_offset, 'query_line': line}})
             query_dict['#'].append(i+arg_offset) 
             continue
         if len(args) > 1:
             for arg in args:
-                query_arr.append({arg: {'idx': i+arg_offset, '_q': line}})
+                query_arr.append({arg: {'idx': i+arg_offset, 'query_line': line}})
                 query_dict[arg] = i+arg_offset
                 arg_offset += 1
             arg_offset -= 1
         else:
             arg = args.pop()
-            query_arr.append({arg: {'idx': i+arg_offset, '_q': line}})
+            query_arr.append({arg: {'idx': i+arg_offset, 'query_line': line}})
             query_dict[arg] = i+arg_offset
     return (query_arr, query_dict)
 
@@ -224,7 +224,7 @@ def parse_sql_entry(entry):
                     if query_arr[arg_idx][key] not in query_built_arr:
                         query_built_arr.append(query_arr[arg_idx][key])
                         # add the args required by this line to tracker
-                        query_args_set.update(parse_args(query_arr[arg_idx][key]['_q']))
+                        query_args_set.update(parse_args(query_arr[arg_idx][key]['query_line']))
                 else:
                     if STRICT_BUILT_PARSE:
                         raise SQLArgumentException('Named argument supplied which does not match a SQL clause', key)
@@ -237,8 +237,8 @@ def parse_sql_entry(entry):
             # sort the final built up query array and reduce query into string
             query_built_arr = sorted(query_built_arr, key=lambda x: x.get('idx'))
             for q in query_built_arr:
-                if q.get('_q') not in query_built:
-                    query_built = "{}\n{}".format(query_built, q.get('_q'))
+                if q.get('query_line') not in query_built:
+                    query_built = "{}\n{}".format(query_built, q.get('query_line'))
             if fetchone:
                 try:
                     cur.execute(query_built, kwargs)
