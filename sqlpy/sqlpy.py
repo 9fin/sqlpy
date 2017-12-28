@@ -178,8 +178,9 @@ def parse_sql_entry(entry):
                 if module_logger.isEnabledFor(logging.DEBUG):
                     module_logger.debug('SQL: {}'.format(query))
                 module_logger.info('Arguments: {}'.format(kwargs if len(kwargs) > 0 else args))
-            except psycopg2.Error:
-                module_logger.exception("Psycopg2 Error")
+            except Exception as e:
+                module_logger.error('Exception Type "{}" raised, on executing query "{}"'
+                                    .format(type(e), name), exc_info=True)
                 raise
             else:
                 if fetch_n:
@@ -192,8 +193,9 @@ def parse_sql_entry(entry):
                 if module_logger.isEnabledFor(logging.DEBUG):
                     module_logger.debug('SQL: {}'.format(query))
                 module_logger.info('Arguments: {}'.format(kwargs if len(kwargs) > 0 else args))
-            except psycopg2.Error:
-                module_logger.exception("Psycopg2 Error")
+            except Exception as e:
+                module_logger.error('Exception Type "{}" raised, on executing query "{}"'
+                                    .format(type(e), name), exc_info=True)
                 raise
             else:
                 results = True
@@ -203,8 +205,9 @@ def parse_sql_entry(entry):
                 if module_logger.isEnabledFor(logging.DEBUG):
                     module_logger.debug('SQL: {}'.format(query))
                 module_logger.info('Arguments: {}'.format(kwargs if len(kwargs) > 0 else args))
-            except psycopg2.Error:
-                module_logger.exception("Psycopg2 Error")
+            except Exception as e:
+                module_logger.error('Exception Type "{}" raised, on executing query "{}"'
+                                    .format(type(e), name), exc_info=True)
                 raise
             else:
                 results = cur.fetchall()
@@ -214,8 +217,9 @@ def parse_sql_entry(entry):
                 if module_logger.isEnabledFor(logging.DEBUG):
                     module_logger.debug('SQL: {}'.format(query))
                 module_logger.info('Arguments: {}'.format(kwargs if len(kwargs) > 0 else args))
-            except psycopg2.Error:
-                module_logger.exception("Psycopg2 Error")
+            except Exception as e:
+                module_logger.error('Exception Type "{}" raised, on executing query "{}"'
+                                    .format(type(e), name), exc_info=True)
                 raise
             else:
                 results = cur.fetchmany(fetch_n)
@@ -254,8 +258,9 @@ def parse_sql_entry(entry):
                     if module_logger.isEnabledFor(logging.DEBUG):
                         module_logger.debug('SQL: {}'.format(query_built))
                     module_logger.info('Arguments: {}'.format(kwargs if len(kwargs) > 0 else args))
-                except psycopg2.Error:
-                    module_logger.exception("Psycopg2 Error")
+                except Exception as e:
+                    module_logger.error('Exception Type "{}" raised, on executing query "{}"'
+                                        .format(type(e), name), exc_info=True)
                     raise
                 else:
                     results = cur.fetchmany(fetch_n)
@@ -265,8 +270,9 @@ def parse_sql_entry(entry):
                     if module_logger.isEnabledFor(logging.DEBUG):
                         module_logger.debug('SQL: {}'.format(query_built))
                     module_logger.info('Arguments: {}'.format(kwargs if len(kwargs) > 0 else args))
-                except psycopg2.Error:
-                    module_logger.exception("Psycopg2 Error")
+                except Exception as e:
+                    module_logger.error('Exception Type "{}" raised, on executing query "{}"'
+                                        .format(type(e), name), exc_info=True)
                     raise
                 else:
                     results = cur.fetchall()
