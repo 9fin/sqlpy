@@ -371,10 +371,10 @@ class TestExecExcept:
         with pytest.raises(SQLArgumentException, message='"fetch_n" is not an Integer >= 0'):
             sql = Queries(queries_file)
             data = ('BEN',)
-            sql.GET_ACTORS_BY_FIRST_NAME_EXP(db_cur, '1', data)
+            sql.GET_ACTORS_BY_FIRST_NAME(db_cur, '1', data)
 
     def test_data7_1(self, db_cur, queries_file):
         with pytest.raises(SQLArgumentException, message='"fetch_n" is not an Integer >= 0'):
             sql = Queries(queries_file)
             data = ('BEN',)
-            sql.GET_ACTORS_BY_FIRST_NAME_EXP(db_cur, '0', data)
+            sql.GET_ACTORS_BY_FIRST_NAME(db_cur, '0', data)
