@@ -295,7 +295,8 @@ class TestExec:
         assert output
 
     def test_data5_1(self, db_cur, queries_file):
-        with pytest.raises(SQLArgumentException):
+        exc_msg = r'^Named argument supplied which does not match a SQL clause: .*'
+        with pytest.raises(SQLArgumentException, match=exc_msg):
             sql = Queries(queries_file, strict_parse=True)
             kwdata = {
                 'countires': ['United States'],

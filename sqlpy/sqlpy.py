@@ -31,7 +31,9 @@ class SQLParseException(SQLpyException, ValueError):
 
 
 class SQLArgumentException(SQLpyException, ValueError):
-    pass
+    """Exception raised when errors occur arguments passed to function partial"""
+    def __init__(self, msg, key=None):
+        super(SQLArgumentException, self).__init__('{}{}'.format(msg, key if key else ''))
 
 
 class QueryType(Enum):
@@ -234,7 +236,7 @@ def parse_sql_entry(entry):
                         query_args_set.update(parse_args(query_arr[arg_idx][key]['query_line']))
                 else:
                     if STRICT_BUILT_PARSE:
-                        raise SQLArgumentException('Named argument supplied which does not match a SQL clause', key)
+                        raise SQLArgumentException('Named argument supplied which does not match a SQL clause: ', key=key)
             # do a diff of the keys in input kwargs and query_built
             # set anything missing to None
             diff = arg_key_diff(query_args_set, set(kwargs.keys()))
