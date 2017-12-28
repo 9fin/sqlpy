@@ -146,10 +146,10 @@ def parse_sql_entry(entry):
         name = name.replace('$', '')
     else:
         sql_type = QueryType.SELECT
-    if lines[1].startswith('-- '):
-        doc = lines[1][3:]
-    if doc:
-        query = lines[2:]
+    comments = list(line.strip('-').strip() for line in lines[1:] if line.startswith('--'))
+    if comments:
+        doc = '\n'.join(comments)
+        query = lines[len(comments)+1:]
     else:
         query = lines[1:]
     query_dict = None

@@ -146,7 +146,7 @@ class TestLoad:
     def test_load_fcn_doc(self, queries_file):
         parsed = load_queires(queries_file)
         fcn = parsed[0][1]
-        assert fcn.__doc__ == 'testing the sqlpi module pls work'
+        assert fcn.__doc__ == 'testing the sqlpi module pls work\nsecond line comment'
 
 
 class TestQuery:
