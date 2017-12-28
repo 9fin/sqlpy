@@ -7,6 +7,8 @@ import logging
 
 # get the module logger
 module_logger = logging.getLogger(__name__)
+# add default NullHandler to avoid "No handler found" warnings.
+logging.getLogger(__name__).addHandler(logging.NullHandler())
 
 
 class SQLLoadException(Exception):
@@ -36,6 +38,7 @@ class Queries(object):
             STRICT_BUILT_PARSE = True
         for name, fn in load_queires(filepath):
             self.add_query(name, fn)
+        module_logger.info('Found and loaded {} sql queires'.format(len(self.available_queries)))
 
     def __repr__(self):
         return "sqlpy.Queries("+self.available_queries.__repr__()+")"

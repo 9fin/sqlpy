@@ -168,6 +168,14 @@ class TestQuery:
         assert len(sql.TEST_SELECT.args) == 4
 
 
+class TestInitLogging:
+    def test_logging(self, queries_file, caplog):
+        Queries(queries_file)
+        for record in caplog.records:
+            assert record.levelname == 'INFO'
+        assert 'Found and loaded' in caplog.text
+
+
 class TestExceptions:
     def test_load_exception(self, invalid_file_path):
         with pytest.raises(SQLLoadException):
