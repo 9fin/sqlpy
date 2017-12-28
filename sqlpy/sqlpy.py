@@ -160,7 +160,9 @@ def parse_sql_entry(entry):
         query_arr, query_dict = built_query_tuple(query)
     query = '\n'.join(query)
 
-    def fn(query, query_dict, query_arr, sql_type, cur, fetchone, args=None, identifers=None, **kwargs):
+    def fn(query, query_dict, query_arr, sql_type, cur, fetch_n, args=None, identifers=None, **kwargs):
+        if fetch_n or not isinstance(fetch_n, int) or fetch_n < 0:
+            raise SQLArgumentException('"fetch_n" is not an Integer >= 0')
         module_logger.info('Executing: {}'.format(name))
         results = None
         if identifers:
@@ -176,7 +178,7 @@ def parse_sql_entry(entry):
                 module_logger.exception("Psycopg2 Error")
                 raise
             else:
-                results = cur.fetchone()
+                results = cur.fetchmany(fetch_n)
         if sql_type == QueryType.INSERT_UPDATE_DELETE:
             try:
                 cur.execute(query, kwargs if len(kwargs) > 0 else args)
@@ -188,7 +190,7 @@ def parse_sql_entry(entry):
                 raise
             else:
                 results = True
-        if sql_type == QueryType.SELECT and not fetchone:
+        if sql_type == QueryType.SELECT and not fetch_n:
             try:
                 cur.execute(query, kwargs if len(kwargs) > 0 else args)
                 if module_logger.isEnabledFor(logging.DEBUG):
@@ -199,7 +201,7 @@ def parse_sql_entry(entry):
                 raise
             else:
                 results = cur.fetchall()
-        elif sql_type == QueryType.SELECT and fetchone:
+        elif sql_type == QueryType.SELECT and fetch_n:
             try:
                 cur.execute(query, kwargs if len(kwargs) > 0 else args)
                 if module_logger.isEnabledFor(logging.DEBUG):
@@ -209,7 +211,7 @@ def parse_sql_entry(entry):
                 module_logger.exception("Psycopg2 Error")
                 raise
             else:
-                results = cur.fetchone()
+                results = cur.fetchmany(fetch_n)
         if sql_type == QueryType.SELECT_BUILT:
             query_built = ''
             query_args_set = set()
@@ -239,7 +241,7 @@ def parse_sql_entry(entry):
             for q in query_built_arr:
                 if q.get('query_line') not in query_built:
                     query_built = "{}\n{}".format(query_built, q.get('query_line'))
-            if fetchone:
+            if fetch_n:
                 try:
                     cur.execute(query_built, kwargs)
                     if module_logger.isEnabledFor(logging.DEBUG):
@@ -249,7 +251,7 @@ def parse_sql_entry(entry):
                     module_logger.exception("Psycopg2 Error")
                     raise
                 else:
-                    results = cur.fetchone()
+                    results = cur.fetchmany(fetch_n)
             else:
                 try:
                     cur.execute(query_built, kwargs)
