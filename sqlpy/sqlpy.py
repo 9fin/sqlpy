@@ -4,6 +4,7 @@ from psycopg2 import sql
 from psycopg2.extensions import quote_ident
 from functools import partial
 import logging
+from errno import ENOENT
 
 # get the module logger
 module_logger = logging.getLogger(__name__)
@@ -11,15 +12,21 @@ module_logger = logging.getLogger(__name__)
 logging.getLogger(__name__).addHandler(logging.NullHandler())
 
 
-class SQLLoadException(Exception):
+class SQLpyException(Exception):
     pass
 
 
-class SQLParseException(Exception):
+class SQLLoadException(SQLpyException, IOError):
+    """Exception raised when errors occur in file IO"""
+    def __init__(self, msg, filename):
+        super(SQLLoadException, self).__init__(os.strerror(ENOENT), msg, filename)
+
+
+class SQLParseException(SQLpyException, ValueError):
     pass
 
 
-class SQLArgumentException(Exception):
+class SQLArgumentException(SQLpyException, ValueError):
     pass
 
 
