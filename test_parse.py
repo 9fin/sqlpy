@@ -184,19 +184,23 @@ class TestExceptions:
             load_queires(invalid_file_path)
 
     def test_parse_exception(self, invalid_sql_name_start):
-        with pytest.raises(SQLParseException):
+        exc_msg = r'^Query does not start with "-- name:": .*'
+        with pytest.raises(SQLParseException, match=exc_msg):
             parse_sql_entry(invalid_sql_name_start)
 
     def test_parse_exception2(self, invalid_sql_name_spaces):
-        with pytest.raises(SQLParseException):
+        exc_msg = r'^Query name has spaces: .*'
+        with pytest.raises(SQLParseException, match=exc_msg):
             parse_sql_entry(invalid_sql_name_spaces)
 
     def test_parse_exception3(self, invalid_sql_built):
-        with pytest.raises(SQLParseException):
+        exc_msg = r'^parse error, no argument found between \(\.\.\.\): .*'
+        with pytest.raises(SQLParseException, match=exc_msg):
             parse_sql_entry(invalid_sql_built)
 
     def test_parse_exception4(self, invalid_sql_built_args):
-        with pytest.raises(SQLParseException):
+        exc_msg = r'^parse error, arg numbers do not match in string s: .*'
+        with pytest.raises(SQLParseException, match=exc_msg):
             parse_sql_entry(invalid_sql_built_args)
 
 

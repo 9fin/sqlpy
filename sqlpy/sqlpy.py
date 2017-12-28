@@ -23,7 +23,9 @@ class SQLLoadException(SQLpyException, IOError):
 
 
 class SQLParseException(SQLpyException, ValueError):
-    pass
+    """Exception raised when errors occur in building sql strings"""
+    def __init__(self, msg, string):
+        super(SQLParseException, self).__init__('{}"{}"'.format(msg, string))
 
 
 class SQLArgumentException(SQLpyException, ValueError):
@@ -86,10 +88,10 @@ def parse_args(s):
             # just a normal )
             pass
     if len(arg_start) != len(arg_end):
-        raise SQLParseException('parse error, arg numbers do not match in string s', s)
+        raise SQLParseException('parse error, arg numbers do not match in string s: ', s)
     for i in range(len(arg_start)):
         if arg_end[i] - arg_start[i] < 1:
-            raise SQLParseException('parse error, no argument found between (...)', s)
+            raise SQLParseException('parse error, no argument found between (...): ', s)
         out.add(s[arg_start[i]:arg_end[i]])
     return out
 
@@ -124,11 +126,11 @@ def arg_key_diff(s1, s2):
 def parse_sql_entry(entry):
     lines = entry.split('\n')
     if not lines[0].startswith('-- name: '):
-        raise SQLParseException('Query does not start with "-- name:".', lines[0])
+        raise SQLParseException('Query does not start with "-- name:": ', lines[0])
     name = get_fn_name(lines[0])
     doc = None
     if ' ' in name:
-        raise SQLParseException('Query name has spaces in it. "{}"'.format(lines[0]))
+        raise SQLParseException('Query name has spaces: ', lines[0])
     elif '<!>' in name:
         sql_type = RETURN_ID
         name = name.replace('<!>', '')
