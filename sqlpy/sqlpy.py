@@ -5,6 +5,7 @@ from psycopg2.extensions import quote_ident
 from functools import partial
 import logging
 from errno import ENOENT
+from enum import Enum
 
 # get the module logger
 module_logger = logging.getLogger(__name__)
@@ -32,10 +33,13 @@ class SQLArgumentException(SQLpyException, ValueError):
     pass
 
 
-SELECT = 1
-INSERT_UPDATE_DELETE = 2
-SELECT_BUILT = 3
-RETURN_ID = 4
+class QueryType(Enum):
+    SELECT = 1
+    INSERT_UPDATE_DELETE = 2
+    SELECT_BUILT = 3
+    RETURN_ID = 4
+
+
 STRICT_BUILT_PARSE = False
 
 
@@ -132,16 +136,16 @@ def parse_sql_entry(entry):
     if ' ' in name:
         raise SQLParseException('Query name has spaces: ', lines[0])
     elif '<!>' in name:
-        sql_type = RETURN_ID
+        sql_type = QueryType.RETURN_ID
         name = name.replace('<!>', '')
     elif '!' in name:
-        sql_type = INSERT_UPDATE_DELETE
+        sql_type = QueryType.INSERT_UPDATE_DELETE
         name = name.replace('!', '')
     elif '$' in name:
-        sql_type = SELECT_BUILT
+        sql_type = QueryType.SELECT_BUILT
         name = name.replace('$', '')
     else:
-        sql_type = SELECT
+        sql_type = QueryType.SELECT
     if lines[1].startswith('-- '):
         doc = lines[1][3:]
     if doc:
@@ -150,7 +154,7 @@ def parse_sql_entry(entry):
         query = lines[1:]
     query_dict = None
     query_arr = None
-    if sql_type == SELECT_BUILT:
+    if sql_type == QueryType.SELECT_BUILT:
         query_arr, query_dict = built_query_tuple(query)
     query = '\n'.join(query)
 
@@ -160,7 +164,7 @@ def parse_sql_entry(entry):
         if identifers:
             identifers = map(lambda i: quote_ident(i, cur), identifers)
             query = sql.SQL(query.format(*identifers))
-        if sql_type == RETURN_ID:
+        if sql_type == QueryType.RETURN_ID:
             try:
                 cur.execute(query, kwargs if len(kwargs) > 0 else args)
                 if module_logger.isEnabledFor(logging.DEBUG):
@@ -171,7 +175,7 @@ def parse_sql_entry(entry):
                 raise
             else:
                 results = cur.fetchone()
-        if sql_type == INSERT_UPDATE_DELETE:
+        if sql_type == QueryType.INSERT_UPDATE_DELETE:
             try:
                 cur.execute(query, kwargs if len(kwargs) > 0 else args)
                 if module_logger.isEnabledFor(logging.DEBUG):
@@ -182,7 +186,7 @@ def parse_sql_entry(entry):
                 raise
             else:
                 results = True
-        if sql_type == SELECT and not fetchone:
+        if sql_type == QueryType.SELECT and not fetchone:
             try:
                 cur.execute(query, kwargs if len(kwargs) > 0 else args)
                 if module_logger.isEnabledFor(logging.DEBUG):
@@ -193,7 +197,7 @@ def parse_sql_entry(entry):
                 raise
             else:
                 results = cur.fetchall()
-        elif sql_type == SELECT and fetchone:
+        elif sql_type == QueryType.SELECT and fetchone:
             try:
                 cur.execute(query, kwargs if len(kwargs) > 0 else args)
                 if module_logger.isEnabledFor(logging.DEBUG):
@@ -204,7 +208,7 @@ def parse_sql_entry(entry):
                 raise
             else:
                 results = cur.fetchone()
-        if sql_type == SELECT_BUILT:
+        if sql_type == QueryType.SELECT_BUILT:
             query_built_arr = []
             query_built = ''
             query_args_set = set()

@@ -5,8 +5,7 @@ import sys
 import functools
 import psycopg2
 from sqlpy.sqlpy import Queries, load_queires, SQLLoadException,\
-    SQLParseException, SQLArgumentException, parse_sql_entry, SELECT,\
-    INSERT_UPDATE_DELETE, SELECT_BUILT, RETURN_ID
+    SQLParseException, SQLArgumentException, parse_sql_entry, QueryType
 import logging
 
 
@@ -207,15 +206,15 @@ class TestExceptions:
 class TestQueryTypes:
     def test_type_bang(self, sql_bang):
         name, fcn = parse_sql_entry(sql_bang)
-        assert fcn.args[3] == INSERT_UPDATE_DELETE
+        assert fcn.args[3] == QueryType.INSERT_UPDATE_DELETE
 
     def test_type_bang_return(self, sql_bang_return):
         name, fcn = parse_sql_entry(sql_bang_return)
-        assert fcn.args[3] == RETURN_ID
+        assert fcn.args[3] == QueryType.RETURN_ID
 
     def test_type_built(self, sql_built):
         name, fcn = parse_sql_entry(sql_built)
-        assert fcn.args[3] == SELECT_BUILT
+        assert fcn.args[3] == QueryType.SELECT_BUILT
 
 
 @pytest.mark.skipif('TRAVIS' not in os.environ, reason="test data only in Travis")
