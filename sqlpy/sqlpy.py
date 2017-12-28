@@ -209,13 +209,11 @@ def parse_sql_entry(entry):
             else:
                 results = cur.fetchone()
         if sql_type == QueryType.SELECT_BUILT:
-            query_built_arr = []
             query_built = ''
             query_args_set = set()
             # throw all the non arg containing lines in first
             noarg_idx = query_dict.get('#')
-            for idx in noarg_idx:
-                query_built_arr.append(query_arr[idx]['#'])
+            query_built_arr = list(query_arr[idx]['#'] for idx in noarg_idx)
             # now add lines with args into the mix
             for key, value in kwargs.items():
                 arg_idx = query_dict.get(key)
