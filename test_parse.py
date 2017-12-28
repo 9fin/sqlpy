@@ -178,7 +178,9 @@ class TestInitLogging:
 
 class TestExceptions:
     def test_load_exception(self, invalid_file_path):
-        with pytest.raises(SQLLoadException):
+        exc_msg = "[Errno No such file or directory] Could not find file: '{}'"\
+                  .format(invalid_file_path)
+        with pytest.raises(SQLLoadException, message=exc_msg):
             load_queires(invalid_file_path)
 
     def test_parse_exception(self, invalid_sql_name_start):
