@@ -9,9 +9,7 @@ from errno import ENOENT
 from enum import Enum
 
 # get the module logger
-module_logger = logging.getLogger(__name__)
-# add default NullHandler to avoid "No handler found" warnings.
-logging.getLogger(__name__).addHandler(logging.NullHandler())
+logger = logging.getLogger(__name__)
 
 
 class SQLpyException(Exception):
@@ -54,7 +52,7 @@ class Queries(object):
             STRICT_BUILT_PARSE = True
         for name, fn in load_queires(filepath):
             self.add_query(name, fn)
-        module_logger.info('Found and loaded {} sql queires'.format(len(self.available_queries)))
+        logger.info('Found and loaded {} sql queires'.format(len(self.available_queries)))
 
     def __repr__(self):
         return "sqlpy.Queries("+self.available_queries.__repr__()+")"
@@ -111,7 +109,7 @@ def built_query_tuple(in_arr):
         args = parse_args(line)
         if not args:
             query_arr.append({'#': {'idx': i+arg_offset, 'query_line': line}})
-            query_dict['#'].append(i+arg_offset) 
+            query_dict['#'].append(i+arg_offset)
             continue
         if len(args) > 1:
             for arg in args:
@@ -167,7 +165,7 @@ def parse_sql_entry(entry):
             raise SQLpyException('"fetch_n" must be an Integer >= 0')
         if fetch_n < 0:
             raise SQLpyException('"fetch_n" must be >= 0')
-        module_logger.info('Executing: {}'.format(name))
+        logger.info('Executing: {}'.format(name))
         results = None
         if identifers:
             identifers = map(lambda i: quote_ident(i, cur), identifers)
@@ -175,11 +173,11 @@ def parse_sql_entry(entry):
         if sql_type == QueryType.RETURN_ID:
             try:
                 cur.execute(query, kwargs if len(kwargs) > 0 else args)
-                if module_logger.isEnabledFor(logging.DEBUG):
-                    module_logger.debug('SQL: {}'.format(query))
-                module_logger.info('Arguments: {}'.format(kwargs if len(kwargs) > 0 else args))
+                if logger.isEnabledFor(logging.DEBUG):
+                    logger.debug('SQL: {}'.format(query))
+                logger.info('Arguments: {}'.format(kwargs if len(kwargs) > 0 else args))
             except Exception as e:
-                module_logger.error('Exception Type "{}" raised, on executing query "{}"'
+                logger.error('Exception Type "{}" raised, on executing query "{}"'
                                     .format(type(e), name), exc_info=True)
                 raise
             else:
@@ -190,11 +188,11 @@ def parse_sql_entry(entry):
         if sql_type == QueryType.INSERT_UPDATE_DELETE:
             try:
                 cur.execute(query, kwargs if len(kwargs) > 0 else args)
-                if module_logger.isEnabledFor(logging.DEBUG):
-                    module_logger.debug('SQL: {}'.format(query))
-                module_logger.info('Arguments: {}'.format(kwargs if len(kwargs) > 0 else args))
+                if logger.isEnabledFor(logging.DEBUG):
+                    logger.debug('SQL: {}'.format(query))
+                logger.info('Arguments: {}'.format(kwargs if len(kwargs) > 0 else args))
             except Exception as e:
-                module_logger.error('Exception Type "{}" raised, on executing query "{}"'
+                logger.error('Exception Type "{}" raised, on executing query "{}"'
                                     .format(type(e), name), exc_info=True)
                 raise
             else:
@@ -202,11 +200,11 @@ def parse_sql_entry(entry):
         if sql_type == QueryType.SELECT and not fetch_n:
             try:
                 cur.execute(query, kwargs if len(kwargs) > 0 else args)
-                if module_logger.isEnabledFor(logging.DEBUG):
-                    module_logger.debug('SQL: {}'.format(query))
-                module_logger.info('Arguments: {}'.format(kwargs if len(kwargs) > 0 else args))
+                if logger.isEnabledFor(logging.DEBUG):
+                    logger.debug('SQL: {}'.format(query))
+                logger.info('Arguments: {}'.format(kwargs if len(kwargs) > 0 else args))
             except Exception as e:
-                module_logger.error('Exception Type "{}" raised, on executing query "{}"'
+                logger.error('Exception Type "{}" raised, on executing query "{}"'
                                     .format(type(e), name), exc_info=True)
                 raise
             else:
@@ -214,11 +212,11 @@ def parse_sql_entry(entry):
         elif sql_type == QueryType.SELECT and fetch_n:
             try:
                 cur.execute(query, kwargs if len(kwargs) > 0 else args)
-                if module_logger.isEnabledFor(logging.DEBUG):
-                    module_logger.debug('SQL: {}'.format(query))
-                module_logger.info('Arguments: {}'.format(kwargs if len(kwargs) > 0 else args))
+                if logger.isEnabledFor(logging.DEBUG):
+                    logger.debug('SQL: {}'.format(query))
+                logger.info('Arguments: {}'.format(kwargs if len(kwargs) > 0 else args))
             except Exception as e:
-                module_logger.error('Exception Type "{}" raised, on executing query "{}"'
+                logger.error('Exception Type "{}" raised, on executing query "{}"'
                                     .format(type(e), name), exc_info=True)
                 raise
             else:
@@ -255,11 +253,11 @@ def parse_sql_entry(entry):
             if fetch_n:
                 try:
                     cur.execute(query_built, kwargs)
-                    if module_logger.isEnabledFor(logging.DEBUG):
-                        module_logger.debug('SQL: {}'.format(query_built))
-                    module_logger.info('Arguments: {}'.format(kwargs if len(kwargs) > 0 else args))
+                    if logger.isEnabledFor(logging.DEBUG):
+                        logger.debug('SQL: {}'.format(query_built))
+                    logger.info('Arguments: {}'.format(kwargs if len(kwargs) > 0 else args))
                 except Exception as e:
-                    module_logger.error('Exception Type "{}" raised, on executing query "{}"'
+                    logger.error('Exception Type "{}" raised, on executing query "{}"'
                                         .format(type(e), name), exc_info=True)
                     raise
                 else:
@@ -267,11 +265,11 @@ def parse_sql_entry(entry):
             else:
                 try:
                     cur.execute(query_built, kwargs)
-                    if module_logger.isEnabledFor(logging.DEBUG):
-                        module_logger.debug('SQL: {}'.format(query_built))
-                    module_logger.info('Arguments: {}'.format(kwargs if len(kwargs) > 0 else args))
+                    if logger.isEnabledFor(logging.DEBUG):
+                        logger.debug('SQL: {}'.format(query_built))
+                    logger.info('Arguments: {}'.format(kwargs if len(kwargs) > 0 else args))
                 except Exception as e:
-                    module_logger.error('Exception Type "{}" raised, on executing query "{}"'
+                    logger.error('Exception Type "{}" raised, on executing query "{}"'
                                         .format(type(e), name), exc_info=True)
                     raise
                 else:
