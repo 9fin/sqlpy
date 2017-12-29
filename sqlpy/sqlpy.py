@@ -29,7 +29,7 @@ class Queries(object):
         logger.info('Found and loaded {} sql queires'.format(len(self.available_queries)))
 
     def __repr__(self):
-        return "sqlpy.Queries("+self.available_queries.__repr__()+")"
+        return "sqlpy.Queries(" + self.available_queries.__repr__() + ")"
 
     def add_query(self, name, fn):
         setattr(self, name, fn)
@@ -57,10 +57,10 @@ def parse_args(s):
         if c != '%' and c != ')':
             # normal uninteresting character
             continue
-        elif c == '%' and s[ii+1] == '(':
+        elif c == '%' and s[ii + 1] == '(':
             # start of argument name
-            arg_start.append(ii+2)
-        elif c == ')' and False if ii+1 == len(s) else s[ii+1] == 's':
+            arg_start.append(ii + 2)
+        elif c == ')' and False if ii + 1 == len(s) else s[ii + 1] == 's':
             # end of argument name
             arg_end.append(ii)
         else:  # pragma: no cover
@@ -82,24 +82,24 @@ def built_query_tuple(in_arr):
     for i, line in enumerate(in_arr):
         args = parse_args(line)
         if not args:
-            query_arr.append({'#': {'idx': i+arg_offset, 'query_line': line}})
-            query_dict['#'].append(i+arg_offset)
+            query_arr.append({'#': {'idx': i + arg_offset, 'query_line': line}})
+            query_dict['#'].append(i + arg_offset)
             continue
         if len(args) > 1:
             for arg in args:
-                query_arr.append({arg: {'idx': i+arg_offset, 'query_line': line}})
-                query_dict[arg] = i+arg_offset
+                query_arr.append({arg: {'idx': i + arg_offset, 'query_line': line}})
+                query_dict[arg] = i + arg_offset
                 arg_offset += 1
             arg_offset -= 1
         else:
             arg = args.pop()
-            query_arr.append({arg: {'idx': i+arg_offset, 'query_line': line}})
-            query_dict[arg] = i+arg_offset
+            query_arr.append({arg: {'idx': i + arg_offset, 'query_line': line}})
+            query_dict[arg] = i + arg_offset
     return (query_arr, query_dict)
 
 
 def arg_key_diff(s1, s2):
-    return s1-s2
+    return s1 - s2
 
 
 def parse_sql_entry(entry):
@@ -125,7 +125,7 @@ def parse_sql_entry(entry):
     comments = list(line.strip('-').strip() for line in takewhile(lambda l: l.startswith('--'), lines[1:]))
     if comments:
         doc = '\n'.join(comments)
-        query = lines[len(comments)+1:]
+        query = lines[len(comments) + 1:]
     else:
         query = lines[1:]
     query_dict = None
