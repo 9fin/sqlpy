@@ -3,34 +3,13 @@ from psycopg2 import sql
 from psycopg2.extensions import quote_ident
 from functools import partial
 from itertools import takewhile
-import logging
-from errno import ENOENT
 from enum import Enum
+from .exceptions import (SQLpyException, SQLLoadException,
+                         SQLParseException, SQLArgumentException)
+import logging
 
 # get the module logger
 logger = logging.getLogger(__name__)
-
-
-class SQLpyException(Exception):
-    pass
-
-
-class SQLLoadException(SQLpyException, IOError):
-    """Exception raised when errors occur in file IO"""
-    def __init__(self, msg, filename):
-        super(SQLLoadException, self).__init__(os.strerror(ENOENT), msg, filename)
-
-
-class SQLParseException(SQLpyException, ValueError):
-    """Exception raised when errors occur in building sql strings"""
-    def __init__(self, msg, string):
-        super(SQLParseException, self).__init__('{}"{}"'.format(msg, string))
-
-
-class SQLArgumentException(SQLpyException, ValueError):
-    """Exception raised when errors occur arguments passed to function partial"""
-    def __init__(self, msg, key=None):
-        super(SQLArgumentException, self).__init__('{}{}'.format(msg, key if key else ''))
 
 
 class QueryType(Enum):

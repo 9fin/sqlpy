@@ -4,7 +4,7 @@ import os
 import sys
 import functools
 import psycopg2
-from sqlpy.sqlpy import Queries, load_queires, SQLLoadException,\
+from sqlpy import Queries, load_queires, SQLLoadException,\
     SQLParseException, SQLArgumentException, SQLpyException, parse_sql_entry, QueryType
 import logging
 

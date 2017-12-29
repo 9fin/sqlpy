@@ -1,5 +1,7 @@
 import logging
-from .sqlpy import *
+from .sqlpy import Queries, load_queires, parse_sql_entry, QueryType
+from .exceptions import (SQLpyException, SQLLoadException,
+                         SQLParseException, SQLArgumentException)
 
 
 __description__ = 'Write actual SQL to retrieve your data.'
