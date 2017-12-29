@@ -1,5 +1,5 @@
 import os
-from psycopg2.extensions import quote_ident
+from .config import quote_ident, STRICT_BUILT_PARSE
 from functools import partial
 from itertools import takewhile
 from enum import Enum
@@ -18,15 +18,11 @@ class QueryType(Enum):
     RETURN_ID = 4
 
 
-STRICT_BUILT_PARSE = False
-
-
 class Queries(object):
     def __init__(self, filepath, strict_parse=False, queries=list()):
         self.available_queries = []
-        if strict_parse:
-            global STRICT_BUILT_PARSE
-            STRICT_BUILT_PARSE = True
+        global STRICT_BUILT_PARSE
+        STRICT_BUILT_PARSE = strict_parse
         for name, fn in load_queires(filepath):
             self.add_query(name, fn)
         logger.info('Found and loaded {} sql queires'.format(len(self.available_queries)))
@@ -145,6 +141,8 @@ def parse_sql_entry(entry):
         logger.info('Executing: {}'.format(name))
         results = None
         if identifers:
+            if not quote_ident:
+                raise SQLpyException('"quote_ident" is not supported')
             identifers = list(quote_ident(i, cur) for i in identifers)
             query = query.format(*identifers)
         if sql_type == QueryType.RETURN_ID:
