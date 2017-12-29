@@ -1,5 +1,4 @@
 import os
-from psycopg2 import sql
 from psycopg2.extensions import quote_ident
 from functools import partial
 from itertools import takewhile
@@ -147,7 +146,7 @@ def parse_sql_entry(entry):
         results = None
         if identifers:
             identifers = map(lambda i: quote_ident(i, cur), identifers)
-            query = sql.SQL(query.format(*identifers))
+            query = query.format(*identifers)
         if sql_type == QueryType.RETURN_ID:
             try:
                 cur.execute(query, kwargs if len(kwargs) > 0 else args)
