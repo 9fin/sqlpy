@@ -5,7 +5,7 @@ import sys
 import functools
 import psycopg2
 from sqlpy.sqlpy import Queries, load_queires, SQLLoadException,\
-    SQLParseException, SQLArgumentException, parse_sql_entry, QueryType
+    SQLParseException, SQLArgumentException, SQLpyException, parse_sql_entry, QueryType
 import logging
 
 
@@ -375,19 +375,19 @@ class TestExecExcept:
             sql.CUSTOMERS_OR_STAFF_IN_COUNTRY_SORT_EXP(db_cur, 1, None, identifers, **kwdata)
 
     def test_data7(self, db_cur, queries_file):
-        with pytest.raises(SQLArgumentException):
+        with pytest.raises(SQLpyException):
             sql = Queries(queries_file)
             data = ('BEN',)
             sql.GET_ACTORS_BY_FIRST_NAME(db_cur, '1', data)
 
     def test_data7_1(self, db_cur, queries_file):
-        with pytest.raises(SQLArgumentException):
+        with pytest.raises(SQLpyException):
             sql = Queries(queries_file)
             data = ('BEN',)
             sql.GET_ACTORS_BY_FIRST_NAME(db_cur, '0', data)
 
     def test_data7_2(self, db_cur, queries_file):
-        with pytest.raises(SQLArgumentException):
+        with pytest.raises(SQLpyException):
             sql = Queries(queries_file)
             data = ('BEN',)
             sql.GET_ACTORS_BY_FIRST_NAME(db_cur, -1, data)

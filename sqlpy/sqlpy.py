@@ -164,9 +164,9 @@ def parse_sql_entry(entry):
 
     def fn(query, query_dict, query_arr, sql_type, cur, fetch_n, args=None, identifers=None, **kwargs):
         if fetch_n and not isinstance(fetch_n, int):
-            raise SQLArgumentException('"fetch_n" must be an Integer >= 0')
+            raise SQLpyException('"fetch_n" must be an Integer >= 0')
         if fetch_n < 0:
-            raise SQLArgumentException('"fetch_n" must be >= 0')
+            raise SQLpyException('"fetch_n" must be >= 0')
         module_logger.info('Executing: {}'.format(name))
         results = None
         if identifers:
