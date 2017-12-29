@@ -1,5 +1,6 @@
+from __future__ import print_function, absolute_import
 import os
-from .config import quote_ident, STRICT_BUILT_PARSE
+from .config import quote_ident, STRICT_BUILT_PARSE, LOG_QUERY_PARAMS, log_query
 from functools import partial
 from itertools import takewhile
 from enum import Enum
@@ -133,7 +134,7 @@ def parse_sql_entry(entry):
         query_arr, query_dict = built_query_tuple(query)
     query = '\n'.join(query)
 
-    def fn(query, query_dict, query_arr, sql_type, cur, fetch_n, args=None, identifers=None, **kwargs):
+    def fn(query, query_dict, query_arr, sql_type, cur, fetch_n, args=None, identifers=None, log_query_params=LOG_QUERY_PARAMS, **kwargs):
         if fetch_n and not isinstance(fetch_n, int):
             raise SQLpyException('"fetch_n" must be an Integer >= 0')
         if fetch_n < 0:
@@ -146,14 +147,12 @@ def parse_sql_entry(entry):
             identifers = list(quote_ident(i, cur) for i in identifers)
             query = query.format(*identifers)
         if sql_type == QueryType.RETURN_ID:
+            log_query(query, args, kwargs, log_query_params)
             try:
                 cur.execute(query, kwargs if len(kwargs) > 0 else args)
-                if logger.isEnabledFor(logging.DEBUG):
-                    logger.debug('SQL: {}'.format(query))
-                logger.info('Arguments: {}'.format(kwargs if len(kwargs) > 0 else args))
             except Exception as e:
-                logger.error('Exception Type "{}" raised, on executing query "{}"'
-                             .format(type(e), name), exc_info=True)
+                logger.error('Exception Type "{}" raised, on executing query "{}"\n____\n{}\n____'
+                             .format(type(e), name, query), exc_info=True)
                 raise
             else:
                 if fetch_n:
@@ -161,38 +160,32 @@ def parse_sql_entry(entry):
                 else:
                     results = cur.fetchall()
         if sql_type == QueryType.INSERT_UPDATE_DELETE:
+            log_query(query, args, kwargs, log_query_params)
             try:
                 cur.execute(query, kwargs if len(kwargs) > 0 else args)
-                if logger.isEnabledFor(logging.DEBUG):
-                    logger.debug('SQL: {}'.format(query))
-                logger.info('Arguments: {}'.format(kwargs if len(kwargs) > 0 else args))
             except Exception as e:
-                logger.error('Exception Type "{}" raised, on executing query "{}"'
-                             .format(type(e), name), exc_info=True)
+                logger.error('Exception Type "{}" raised, on executing query "{}"\n____\n{}\n____'
+                             .format(type(e), name, query), exc_info=True)
                 raise
             else:
                 results = True
         if sql_type == QueryType.SELECT and not fetch_n:
+            log_query(query, args, kwargs, log_query_params)
             try:
                 cur.execute(query, kwargs if len(kwargs) > 0 else args)
-                if logger.isEnabledFor(logging.DEBUG):
-                    logger.debug('SQL: {}'.format(query))
-                logger.info('Arguments: {}'.format(kwargs if len(kwargs) > 0 else args))
             except Exception as e:
-                logger.error('Exception Type "{}" raised, on executing query "{}"'
-                             .format(type(e), name), exc_info=True)
+                logger.error('Exception Type "{}" raised, on executing query "{}"\n____\n{}\n____'
+                             .format(type(e), name, query), exc_info=True)
                 raise
             else:
                 results = cur.fetchall()
         elif sql_type == QueryType.SELECT and fetch_n:
+            log_query(query, args, kwargs, log_query_params)
             try:
                 cur.execute(query, kwargs if len(kwargs) > 0 else args)
-                if logger.isEnabledFor(logging.DEBUG):
-                    logger.debug('SQL: {}'.format(query))
-                logger.info('Arguments: {}'.format(kwargs if len(kwargs) > 0 else args))
             except Exception as e:
-                logger.error('Exception Type "{}" raised, on executing query "{}"'
-                             .format(type(e), name), exc_info=True)
+                logger.error('Exception Type "{}" raised, on executing query "{}"\n____\n{}\n____'
+                             .format(type(e), name, query), exc_info=True)
                 raise
             else:
                 results = cur.fetchmany(fetch_n)
@@ -226,26 +219,22 @@ def parse_sql_entry(entry):
                 if q.get('query_line') not in query_built:
                     query_built = "{}\n{}".format(query_built, q.get('query_line'))
             if fetch_n:
+                log_query(query_built, args, kwargs, log_query_params)
                 try:
                     cur.execute(query_built, kwargs)
-                    if logger.isEnabledFor(logging.DEBUG):
-                        logger.debug('SQL: {}'.format(query_built))
-                    logger.info('Arguments: {}'.format(kwargs if len(kwargs) > 0 else args))
                 except Exception as e:
-                    logger.error('Exception Type "{}" raised, on executing query "{}"'
-                                 .format(type(e), name), exc_info=True)
+                    logger.error('Exception Type "{}" raised, on executing query "{}"\n____\n{}\n____'
+                                 .format(type(e), name, query), exc_info=True)
                     raise
                 else:
                     results = cur.fetchmany(fetch_n)
             else:
+                log_query(query_built, args, kwargs, log_query_params)
                 try:
                     cur.execute(query_built, kwargs)
-                    if logger.isEnabledFor(logging.DEBUG):
-                        logger.debug('SQL: {}'.format(query_built))
-                    logger.info('Arguments: {}'.format(kwargs if len(kwargs) > 0 else args))
                 except Exception as e:
-                    logger.error('Exception Type "{}" raised, on executing query "{}"'
-                                 .format(type(e), name), exc_info=True)
+                    logger.error('Exception Type "{}" raised, on executing query "{}"\n____\n{}\n____'
+                                 .format(type(e), name, query), exc_info=True)
                     raise
                 else:
                     results = cur.fetchall()

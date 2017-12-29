@@ -245,11 +245,24 @@ class TestExec:
         output = sql.GET_ACTORS_BY_FIRST_NAME(db_cur, 0, data)
         assert len(output) == 2
 
-    def test_data2(self, db_cur, queries_file):
+    def test_data1_2(self, db_cur, queries_file, caplog):
+        sql = Queries(queries_file)
+        data = ('BEN',)
+        sql.GET_ACTORS_BY_FIRST_NAME(db_cur, 1, data, log_query_params=False)
+        assert "INFO Arguments: ('BEN',)" not in caplog.text
+
+    def test_data1_3(self, db_cur, queries_file, caplog):
+        sql = Queries(queries_file)
+        data = ('BEN',)
+        sql.GET_ACTORS_BY_FIRST_NAME(db_cur, 1, data)
+        assert "INFO Arguments: ('BEN',)" in caplog.text
+
+    def test_data2(self, db_cur, queries_file, caplog):
         sql = Queries(queries_file)
         data = ('Jeff', 'Goldblum', 'Jeff', 'Goldblum')
         output = sql.INSERT_ACTOR(db_cur, 1, data)
         assert output[0] == ('Jeff', 'Goldblum')
+        assert "('Jeff', 'Goldblum', 'Jeff', 'Goldblum')" in caplog.text
 
     def test_data2_1(self, db_cur, queries_file):
         sql = Queries(queries_file)
@@ -266,7 +279,7 @@ class TestExec:
         output2 = sql.DELETE_COUNTRY(db_cur, 0, **kwdata)
         assert output1 and output2
 
-    def test_data4(self, db_cur, queries_file):
+    def test_data4(self, db_cur, queries_file, caplog):
         sql = Queries(queries_file)
         kwdata = {
             'countires': ['United States'],
@@ -274,6 +287,7 @@ class TestExec:
         }
         output = sql.CUSTOMERS_OR_STAFF_IN_COUNTRY(db_cur, 0, **kwdata)
         assert len(output) == 37
+        assert "'countires': ['United States']" in caplog.text
 
     def test_data4_1(self, db_cur, queries_file):
         sql = Queries(queries_file)

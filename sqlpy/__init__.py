@@ -1,3 +1,4 @@
+from __future__ import print_function, absolute_import
 import logging
 from .sqlpy import Queries, load_queires, parse_sql_entry, QueryType
 from .exceptions import (SQLpyException, SQLLoadException,
