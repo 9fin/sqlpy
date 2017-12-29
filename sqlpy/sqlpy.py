@@ -145,7 +145,8 @@ def parse_sql_entry(entry):
         logger.info('Executing: {}'.format(name))
         results = None
         if identifers:
-            identifers = map(lambda i: quote_ident(i, cur), identifers)
+            #identifers = map(lambda i: quote_ident(i, cur), identifers)
+            identifers = list(quote_ident(i, cur) for i in identifers)
             query = query.format(*identifers)
         if sql_type == QueryType.RETURN_ID:
             try:
