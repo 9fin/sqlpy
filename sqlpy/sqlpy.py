@@ -1,5 +1,4 @@
 import os
-import psycopg2
 from psycopg2 import sql
 from psycopg2.extensions import quote_ident
 from functools import partial
@@ -178,7 +177,7 @@ def parse_sql_entry(entry):
                 logger.info('Arguments: {}'.format(kwargs if len(kwargs) > 0 else args))
             except Exception as e:
                 logger.error('Exception Type "{}" raised, on executing query "{}"'
-                                    .format(type(e), name), exc_info=True)
+                             .format(type(e), name), exc_info=True)
                 raise
             else:
                 if fetch_n:
@@ -193,7 +192,7 @@ def parse_sql_entry(entry):
                 logger.info('Arguments: {}'.format(kwargs if len(kwargs) > 0 else args))
             except Exception as e:
                 logger.error('Exception Type "{}" raised, on executing query "{}"'
-                                    .format(type(e), name), exc_info=True)
+                             .format(type(e), name), exc_info=True)
                 raise
             else:
                 results = True
@@ -205,7 +204,7 @@ def parse_sql_entry(entry):
                 logger.info('Arguments: {}'.format(kwargs if len(kwargs) > 0 else args))
             except Exception as e:
                 logger.error('Exception Type "{}" raised, on executing query "{}"'
-                                    .format(type(e), name), exc_info=True)
+                             .format(type(e), name), exc_info=True)
                 raise
             else:
                 results = cur.fetchall()
@@ -217,7 +216,7 @@ def parse_sql_entry(entry):
                 logger.info('Arguments: {}'.format(kwargs if len(kwargs) > 0 else args))
             except Exception as e:
                 logger.error('Exception Type "{}" raised, on executing query "{}"'
-                                    .format(type(e), name), exc_info=True)
+                             .format(type(e), name), exc_info=True)
                 raise
             else:
                 results = cur.fetchmany(fetch_n)
@@ -258,7 +257,7 @@ def parse_sql_entry(entry):
                     logger.info('Arguments: {}'.format(kwargs if len(kwargs) > 0 else args))
                 except Exception as e:
                     logger.error('Exception Type "{}" raised, on executing query "{}"'
-                                        .format(type(e), name), exc_info=True)
+                                 .format(type(e), name), exc_info=True)
                     raise
                 else:
                     results = cur.fetchmany(fetch_n)
@@ -270,7 +269,7 @@ def parse_sql_entry(entry):
                     logger.info('Arguments: {}'.format(kwargs if len(kwargs) > 0 else args))
                 except Exception as e:
                     logger.error('Exception Type "{}" raised, on executing query "{}"'
-                                        .format(type(e), name), exc_info=True)
+                                 .format(type(e), name), exc_info=True)
                     raise
                 else:
                     results = cur.fetchall()
