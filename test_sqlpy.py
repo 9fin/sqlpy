@@ -1,7 +1,6 @@
 from __future__ import print_function
 import pytest
 import os
-import sys
 import functools
 import psycopg2
 from sqlpy import Queries, load_queires, SQLLoadException,\
@@ -326,7 +325,7 @@ class TestExec:
             'extra_name': 'BEN'
         }
         identifers = ('country',)
-        output = sql.CUSTOMERS_OR_STAFF_IN_COUNTRY_SORT(db_cur, 1, None, identifers, **kwdata)
+        output = sql.CUSTOMERS_OR_STAFF_IN_COUNTRY_SORT(db_cur, 1, identifers=identifers, **kwdata)
         assert output[0] == ('BEN', 'EASTER', 'Russian Federation')
 
 
@@ -386,7 +385,7 @@ class TestExecExcept:
                 'extra_name': 'BEN'
             }
             identifers = ('country',)
-            sql.CUSTOMERS_OR_STAFF_IN_COUNTRY_SORT_EXP(db_cur, 1, None, identifers, **kwdata)
+            sql.CUSTOMERS_OR_STAFF_IN_COUNTRY_SORT_EXP(db_cur, 1, identifers=identifers, **kwdata)
 
     def test_data7(self, db_cur, queries_file):
         with pytest.raises(SQLpyException):
