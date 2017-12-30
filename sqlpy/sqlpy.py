@@ -1,25 +1,14 @@
 from __future__ import print_function, absolute_import
 import os
-from .config import quote_ident, STRICT_BUILT_PARSE, LOG_QUERY_PARAMS, log_query
+from .config import quote_ident, STRICT_BUILT_PARSE, LOG_QUERY_PARAMS, log_query, QueryType
 from functools import partial
 from itertools import takewhile
-from enum import Enum
 from .exceptions import (SQLpyException, SQLLoadException,
                          SQLParseException, SQLArgumentException)
 import logging
 
 # get the module logger
 logger = logging.getLogger(__name__)
-
-
-class QueryType(Enum):
-    """
-    Enum object of the different SQL statement types
-    """
-    SELECT = 1
-    INSERT_UPDATE_DELETE = 2
-    SELECT_BUILT = 3
-    RETURN_ID = 4
 
 
 class Queries(object):
@@ -176,14 +165,14 @@ def parse_sql_entry(entry):
     Creates a prepared function for a SQL statement.
 
     For a given SQL statement its :class:`QueryType` is matched to its name ending in
-    any of ``<!>, !, $``, for a `RETURN_ID, INSERT_UPDATE_DELETE, SELECT_BUILT` query 
+    any of ``<!>, !, $``, for a `RETURN_ID, INSERT_UPDATE_DELETE, SELECT_BUILT` query
     type respectively. If no end token is found, the query is a `SELECT` query.
 
-    Comments are detected and added to the ``__doc__`` attribute of the returned function.
+    Comments are detected and added to the ``__doc__`` attribute of the returned function
 
     Returns:
         :obj:`str`: name of the prepared function in UPPERCASE
-        :obj:`functools.partial`: ``fn_partial`` the prepared function
+        :obj:`functools.partial`: ```fn_partial`` the prepared function
             the ``fn_partial`` also has these attributes set
                 - ``fn_partial.__doc__``: The comments found on the SQL statement if any
                 - ``fn_partial.__query__``: The string representation of the SQL statement

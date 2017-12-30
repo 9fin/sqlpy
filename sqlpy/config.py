@@ -1,4 +1,5 @@
 import logging
+from enum import Enum
 
 # get the module logger
 logger = logging.getLogger(__name__)
@@ -28,3 +29,13 @@ def log_query(query, args, kwargs, log_query_params):
         logger.debug('SQL: {}'.format(query))
     if log_query_params:
         logger.info('Arguments: {}'.format(kwargs if len(kwargs) > 0 else args))
+
+
+class QueryType(Enum):
+    """
+    Enum object of the different SQL statement types
+    """
+    SELECT = 1
+    INSERT_UPDATE_DELETE = 2
+    SELECT_BUILT = 3
+    RETURN_ID = 4
