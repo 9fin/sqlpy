@@ -5,15 +5,22 @@
 
 .. include:: ./readme.rst
 
+Source Code Documentation
+=========================
+:ref:`sourcedocs`
+
+
+
+
+Indices and tables 
+================== 
+
 .. toctree::
    :maxdepth: 2
+   
    readme
-   modindex
-
-
-Indices and tables
-==================
-
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
+   sourcedocs
+ 
+* :ref:`genindex` 
+* :ref:`modindex` 
+* :ref:`search` 
