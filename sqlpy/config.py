@@ -11,8 +11,8 @@ try:
 except ImportError:  # pragma: no cover
     quote_ident = None
 
-#: The default value for strictly parsing built SQL queires
-#: matching the number of arguments supplied to the SQL code
+#: The default value for strictly parsing built SQL queries
+#: matching the number of parameters supplied to the SQL code
 STRICT_BUILT_PARSE = False
 
 #: The default value for controlling logging of SQL
@@ -20,9 +20,10 @@ STRICT_BUILT_PARSE = False
 LOG_QUERY_PARAMS = True
 
 
-#: Helper function to avoid repeating query log
-#: block at the start of each execution try block
 def log_query(query, args, kwargs, log_query_params):
+    """
+    Helper function to avoid repeating query log block
+    """
     if logger.isEnabledFor(logging.DEBUG):
         logger.debug('SQL: {}'.format(query))
     if log_query_params:

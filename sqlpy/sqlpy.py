@@ -13,6 +13,9 @@ logger = logging.getLogger(__name__)
 
 
 class QueryType(Enum):
+    """
+    Enum object of the different SQL statement types
+    """
     SELECT = 1
     INSERT_UPDATE_DELETE = 2
     SELECT_BUILT = 3
@@ -20,7 +23,19 @@ class QueryType(Enum):
 
 
 class Queries(object):
-    def __init__(self, filepath, strict_parse=False, queries=list()):
+    """
+    Builds the prepared functions of SQL statements for execution.
+
+    Creates Python :obj:`functools.partial` functions, attached to the class as
+    methods.
+
+    Args:
+        filepath (:obj:`list` of :obj:`str`): List of file locations containing
+            the SQL statements.
+        strict_parse (:obj:`str`, optional): Weather to strictly enforce matching
+            the expected and supplied parameters to a SQL statement function.
+    """
+    def __init__(self, filepath, strict_parse=False):
         self.available_queries = []
         global STRICT_BUILT_PARSE
         STRICT_BUILT_PARSE = strict_parse
@@ -29,25 +44,57 @@ class Queries(object):
         logger.info('Found and loaded {} sql queires'.format(len(self.available_queries)))
 
     def __repr__(self):
+        """
+        Prints a list of available SQL statement function by name.
+        """
         return "sqlpy.Queries(" + self.available_queries.__repr__() + ")"
 
     def add_query(self, name, fn):
+        """
+        Adds a function partial to the class object.
+
+        Args:
+            name (:obj:`str`)
+            fn (:obj:`functools.partial`)
+        """
         setattr(self, name, fn)
         if name not in self.available_queries:
             self.available_queries.append(name)
 
 
 def get_fn_name(line):
+    """
+    Extracts the name of a SQL statement
+
+    Args:
+        line (:obj:`str`): First line of a SQL statement
+
+    Returns:
+        :obj:`str`: Uppercase name of the SQL statement
+    """
     name = line.split('-- name:')[1].strip().upper()
     return name
 
 
 def parse_args(s):
-    '''
-    Function which scans a line of raw input sql and looks for and extracts out named
-    arguments for psycopg2. Found between %(...)s tokens. Returns a set ensuring no
-    duplicates are entered for repeating multiple arguments in the same line.
-    '''
+    """
+    Sans a string of SQL and parses out named parameters.
+
+    Function which scans a line of raw input SQL and looks for and extracts out named
+    parameters in `pyformat`. Found between %(...)s tokens. Returns a set ensuring no
+    duplicates are entered for repeating multiple parameters in the same line.
+
+    Args:
+        s (:obj:`str`): Input string
+
+    Returns:
+        :obj:`set` of :obj:`list` of :obj:`str`: A :obj:`set` of strings forming the
+            names of the parameters to be used in the SQL statement.
+
+    Raises:
+        SQLParseException: When the number of parameters found do not match.
+        SQLParseException: When no name is found within the argument while parsing.
+    """
     if '%(' not in s:
         return None
     arg_start = []
@@ -76,6 +123,18 @@ def parse_args(s):
 
 
 def built_query_tuple(in_arr):
+    """
+    Prepares a built query :obj:`list` and :obj:`dict`.
+
+    Builds a :obj:`list` of query parameters and a :obj:`dict` of query line parts, keyed
+    by the parameters within that line.
+
+    Args:
+        in_arr (:obj:`list` of :obj:`str`): List of SQL statement lines
+
+    Returns:
+        :obj:`tuple`: ``(query_arr, query_dict)``
+    """
     query_arr = []
     query_dict = {'#': []}
     arg_offset = 0  # value which tracks the total offset in the array caused by multiple args in a line
@@ -99,10 +158,37 @@ def built_query_tuple(in_arr):
 
 
 def arg_key_diff(s1, s2):
+    """
+    Finds the difference between two sets of strings.
+
+    Args:
+        s1 (:obj:`set`): Set 1
+        s2 (:obj:`set`): Set 2
+
+    Returns:
+        :obj:`set`
+    """
     return s1 - s2
 
 
 def parse_sql_entry(entry):
+    """
+    Creates a prepared function for a SQL statement.
+
+    For a given SQL statement its :class:`QueryType` is matched to its name ending in
+    any of ``<!>, !, $``, for a `RETURN_ID, INSERT_UPDATE_DELETE, SELECT_BUILT` query 
+    type respectively. If no end token is found, the query is a `SELECT` query.
+
+    Comments are detected and added to the ``__doc__`` attribute of the returned function.
+
+    Returns:
+        :obj:`str`: name of the prepared function in UPPERCASE
+        :obj:`functools.partial`: ``fn_partial`` the prepared function
+            the ``fn_partial`` also has these attributes set
+                - ``fn_partial.__doc__``: The comments found on the SQL statement if any
+                - ``fn_partial.__query__``: The string representation of the SQL statement
+                - ``fn_partial.__name__``: The name of the prepared function in UPPERCASE
+    """
     lines = entry.split('\n')
     if not lines[0].startswith('-- name:'):
         raise SQLParseException('Query does not start with "-- name:": ', lines[0])
@@ -251,10 +337,12 @@ def parse_sql_entry(entry):
 
 
 def parse_queires_string(s):
+    """Splits and processes SQL file into individual expressions"""
     return [parse_sql_entry(expression.strip('\n')) for expression in s.split('\n\n') if expression]
 
 
 def load_queires(filepath):
+    """Loads SQL statements as ``strings`` from files"""
     if type(filepath) != list:
         filepath = [filepath]
     f = ''

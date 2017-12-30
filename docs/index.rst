@@ -7,6 +7,8 @@
 
 .. toctree::
    :maxdepth: 2
+   readme
+   modindex
 
 
 Indices and tables
