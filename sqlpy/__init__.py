@@ -9,3 +9,15 @@ __description__ = 'Write actual SQL to retrieve your data.'
 
 # add default NullHandler to avoid "No handler found" warnings.
 logging.getLogger(__name__).addHandler(logging.NullHandler())
+
+
+__all__ = [
+    'Queries',
+    'load_queires',
+    'parse_sql_entry',
+    'QueryType',
+    'SQLpyException',
+    'SQLLoadException',
+    'SQLParseException',
+    'SQLArgumentException'
+]
