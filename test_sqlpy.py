@@ -1,12 +1,10 @@
 from __future__ import print_function
 import pytest
 import os
-import sys
 import functools
 import psycopg2
-from sqlpy.sqlpy import Queries, load_queires, SQLLoadException,\
-    SQLParseException, SQLArgumentException, parse_sql_entry, SELECT,\
-    INSERT_UPDATE_DELETE, SELECT_BUILT, RETURN_ID
+from sqlpy import Queries, load_queires, SQLLoadException,\
+    SQLParseException, SQLArgumentException, SQLpyException, parse_sql_entry, QueryType
 import logging
 
 
@@ -147,7 +145,15 @@ class TestLoad:
     def test_load_fcn_doc(self, queries_file):
         parsed = load_queires(queries_file)
         fcn = parsed[0][1]
-        assert fcn.__doc__ == 'testing the sqlpi module pls work'
+        assert fcn.__doc__ == 'testing the sqlpi module pls work\nsecond line comment'
+
+    def test_load_fcn_querystring_fmt(self, queries_file):
+        parsed = load_queires(queries_file)
+        fcn = parsed[0][1]
+        assert fcn.__query__ == """select *
+-- comment in middle
+from public.actor
+limit 1;"""
 
 
 class TestQuery:
@@ -168,40 +174,54 @@ class TestQuery:
         assert len(sql.TEST_SELECT.args) == 4
 
 
+class TestInitLogging:
+    def test_logging(self, queries_file, caplog):
+        Queries(queries_file)
+        for record in caplog.records:
+            assert record.levelname == 'INFO'
+        assert 'Found and loaded' in caplog.text
+
+
 class TestExceptions:
     def test_load_exception(self, invalid_file_path):
-        with pytest.raises(SQLLoadException):
+        exc_msg = "[Errno No such file or directory] Could not find file: '{}'"\
+                  .format(invalid_file_path)
+        with pytest.raises(SQLLoadException, message=exc_msg):
             load_queires(invalid_file_path)
 
     def test_parse_exception(self, invalid_sql_name_start):
-        with pytest.raises(SQLParseException):
+        exc_msg = r'^Query does not start with "-- name:": .*'
+        with pytest.raises(SQLParseException, match=exc_msg):
             parse_sql_entry(invalid_sql_name_start)
 
     def test_parse_exception2(self, invalid_sql_name_spaces):
-        with pytest.raises(SQLParseException):
+        exc_msg = r'^Query name has spaces: .*'
+        with pytest.raises(SQLParseException, match=exc_msg):
             parse_sql_entry(invalid_sql_name_spaces)
 
     def test_parse_exception3(self, invalid_sql_built):
-        with pytest.raises(SQLParseException):
+        exc_msg = r'^parse error, no argument found between \(\.\.\.\): .*'
+        with pytest.raises(SQLParseException, match=exc_msg):
             parse_sql_entry(invalid_sql_built)
 
     def test_parse_exception4(self, invalid_sql_built_args):
-        with pytest.raises(SQLParseException):
+        exc_msg = r'^parse error, arg numbers do not match in string s: .*'
+        with pytest.raises(SQLParseException, match=exc_msg):
             parse_sql_entry(invalid_sql_built_args)
 
 
 class TestQueryTypes:
     def test_type_bang(self, sql_bang):
         name, fcn = parse_sql_entry(sql_bang)
-        assert fcn.args[3] == INSERT_UPDATE_DELETE
+        assert fcn.args[3] == QueryType.INSERT_UPDATE_DELETE
 
     def test_type_bang_return(self, sql_bang_return):
         name, fcn = parse_sql_entry(sql_bang_return)
-        assert fcn.args[3] == RETURN_ID
+        assert fcn.args[3] == QueryType.RETURN_ID
 
     def test_type_built(self, sql_built):
         name, fcn = parse_sql_entry(sql_built)
-        assert fcn.args[3] == SELECT_BUILT
+        assert fcn.args[3] == QueryType.SELECT_BUILT
 
 
 @pytest.mark.skipif('TRAVIS' not in os.environ, reason="test data only in Travis")
@@ -210,13 +230,13 @@ class TestExec:
     def test_select_1(self, db_cur, sql_select_1):
         name, fcn = parse_sql_entry(sql_select_1)
         output = fcn(db_cur, 1)
-        assert output[0] == 1
+        assert output[0][0] == 1
 
     def test_data1(self, db_cur, queries_file):
         sql = Queries(queries_file)
         data = ('BEN',)
         output = sql.GET_ACTORS_BY_FIRST_NAME(db_cur, 1, data)
-        assert output[0] == 83
+        assert output[0][0] == 83
 
     def test_data1_1(self, db_cur, queries_file):
         sql = Queries(queries_file)
@@ -224,11 +244,30 @@ class TestExec:
         output = sql.GET_ACTORS_BY_FIRST_NAME(db_cur, 0, data)
         assert len(output) == 2
 
-    def test_data2(self, db_cur, queries_file):
+    def test_data1_2(self, db_cur, queries_file, caplog):
+        sql = Queries(queries_file)
+        data = ('BEN',)
+        sql.GET_ACTORS_BY_FIRST_NAME(db_cur, 1, data, log_query_params=False)
+        assert "INFO Arguments: ('BEN',)" not in caplog.text
+
+    def test_data1_3(self, db_cur, queries_file, caplog):
+        sql = Queries(queries_file)
+        data = ('BEN',)
+        sql.GET_ACTORS_BY_FIRST_NAME(db_cur, 1, data)
+        assert "INFO Arguments: ('BEN',)" in caplog.text
+
+    def test_data2(self, db_cur, queries_file, caplog):
+        sql = Queries(queries_file)
+        data = ('Jeff', 'Goldblum', 'Jeff', 'Goldblum')
+        output = sql.INSERT_ACTOR(db_cur, 1, data)
+        assert output[0] == ('Jeff', 'Goldblum')
+        assert "('Jeff', 'Goldblum', 'Jeff', 'Goldblum')" in caplog.text
+
+    def test_data2_1(self, db_cur, queries_file):
         sql = Queries(queries_file)
         data = ('Jeff', 'Goldblum', 'Jeff', 'Goldblum')
         output = sql.INSERT_ACTOR(db_cur, 0, data)
-        assert output == ('Jeff', 'Goldblum')
+        assert output == [('Jeff', 'Goldblum')]
 
     def test_data3(self, db_cur, queries_file):
         sql = Queries(queries_file)
@@ -239,7 +278,7 @@ class TestExec:
         output2 = sql.DELETE_COUNTRY(db_cur, 0, **kwdata)
         assert output1 and output2
 
-    def test_data4(self, db_cur, queries_file):
+    def test_data4(self, db_cur, queries_file, caplog):
         sql = Queries(queries_file)
         kwdata = {
             'countires': ['United States'],
@@ -247,6 +286,7 @@ class TestExec:
         }
         output = sql.CUSTOMERS_OR_STAFF_IN_COUNTRY(db_cur, 0, **kwdata)
         assert len(output) == 37
+        assert "'countires': ['United States']" in caplog.text
 
     def test_data4_1(self, db_cur, queries_file):
         sql = Queries(queries_file)
@@ -268,7 +308,8 @@ class TestExec:
         assert output
 
     def test_data5_1(self, db_cur, queries_file):
-        with pytest.raises(SQLArgumentException):
+        exc_msg = r'^Named argument supplied which does not match a SQL clause: .*'
+        with pytest.raises(SQLArgumentException, match=exc_msg):
             sql = Queries(queries_file, strict_parse=True)
             kwdata = {
                 'countires': ['United States'],
@@ -283,9 +324,9 @@ class TestExec:
             'countires': ['United States'],
             'extra_name': 'BEN'
         }
-        identifers = ('country',)
-        output = sql.CUSTOMERS_OR_STAFF_IN_COUNTRY_SORT(db_cur, 1, None, identifers, **kwdata)
-        assert output == ('BEN', 'EASTER', 'Russian Federation')
+        identifiers = ('country',)
+        output = sql.CUSTOMERS_OR_STAFF_IN_COUNTRY_SORT(db_cur, 1, identifiers=identifiers, **kwdata)
+        assert output[0] == ('BEN', 'EASTER', 'Russian Federation')
 
 
 @pytest.mark.skipif('TRAVIS' not in os.environ, reason="test data only in Travis")
@@ -343,5 +384,23 @@ class TestExecExcept:
                 'countires': ['United States'],
                 'extra_name': 'BEN'
             }
-            identifers = ('country',)
-            sql.CUSTOMERS_OR_STAFF_IN_COUNTRY_SORT_EXP(db_cur, 1, None, identifers, **kwdata)
+            identifiers = ('country',)
+            sql.CUSTOMERS_OR_STAFF_IN_COUNTRY_SORT_EXP(db_cur, 1, identifiers=identifiers, **kwdata)
+
+    def test_data7(self, db_cur, queries_file):
+        with pytest.raises(SQLpyException):
+            sql = Queries(queries_file)
+            data = ('BEN',)
+            sql.GET_ACTORS_BY_FIRST_NAME(db_cur, '1', data)
+
+    def test_data7_1(self, db_cur, queries_file):
+        with pytest.raises(SQLpyException):
+            sql = Queries(queries_file)
+            data = ('BEN',)
+            sql.GET_ACTORS_BY_FIRST_NAME(db_cur, '0', data)
+
+    def test_data7_2(self, db_cur, queries_file):
+        with pytest.raises(SQLpyException):
+            sql = Queries(queries_file)
+            data = ('BEN',)
+            sql.GET_ACTORS_BY_FIRST_NAME(db_cur, -1, data)

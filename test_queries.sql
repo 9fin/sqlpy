@@ -1,6 +1,10 @@
 -- name: test_select
 -- testing the sqlpi module pls work
-select * from public.actor limit 1;
+-- second line comment
+select *
+-- comment in middle
+from public.actor
+limit 1;
 
 
 
