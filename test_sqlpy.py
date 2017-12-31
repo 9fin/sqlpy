@@ -324,8 +324,8 @@ class TestExec:
             'countires': ['United States'],
             'extra_name': 'BEN'
         }
-        identifers = ('country',)
-        output = sql.CUSTOMERS_OR_STAFF_IN_COUNTRY_SORT(db_cur, 1, identifers=identifers, **kwdata)
+        identifiers = ('country',)
+        output = sql.CUSTOMERS_OR_STAFF_IN_COUNTRY_SORT(db_cur, 1, identifiers=identifiers, **kwdata)
         assert output[0] == ('BEN', 'EASTER', 'Russian Federation')
 
 
@@ -384,8 +384,8 @@ class TestExecExcept:
                 'countires': ['United States'],
                 'extra_name': 'BEN'
             }
-            identifers = ('country',)
-            sql.CUSTOMERS_OR_STAFF_IN_COUNTRY_SORT_EXP(db_cur, 1, identifers=identifers, **kwdata)
+            identifiers = ('country',)
+            sql.CUSTOMERS_OR_STAFF_IN_COUNTRY_SORT_EXP(db_cur, 1, identifiers=identifiers, **kwdata)
 
     def test_data7(self, db_cur, queries_file):
         with pytest.raises(SQLpyException):

@@ -209,18 +209,18 @@ def parse_sql_entry(entry):
         query_arr, query_dict = built_query_tuple(query)
     query = '\n'.join(query)
 
-    def fn(query, query_dict, query_arr, sql_type, cur, fetch_n, args=None, identifers=None, log_query_params=LOG_QUERY_PARAMS, **kwargs):
+    def fn(query, query_dict, query_arr, sql_type, cur, fetch_n, args=None, identifiers=None, log_query_params=LOG_QUERY_PARAMS, **kwargs):
         if fetch_n and not isinstance(fetch_n, int):
             raise SQLpyException('"fetch_n" must be an Integer >= 0')
         if fetch_n < 0:
             raise SQLpyException('"fetch_n" must be >= 0')
         logger.info('Executing: {}'.format(name))
         results = None
-        if identifers:
+        if identifiers:
             if not quote_ident:
                 raise SQLpyException('"quote_ident" is not supported')
-            identifers = list(quote_ident(i, cur) for i in identifers)
-            query = query.format(*identifers)
+            identifiers = list(quote_ident(i, cur) for i in identifiers)
+            query = query.format(*identifiers)
         if sql_type == QueryType.RETURN_ID:
             log_query(query, args, kwargs, log_query_params)
             try:

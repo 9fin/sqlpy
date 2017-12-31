@@ -3,7 +3,9 @@ SQLpy - it's just SQL
 =====================
 |pypi| |build-status| |coverage| |versions|
 
+
 With SQLpy you can work directly with advanced SQL from the comfort of your Python code. Write SQL in `.sql` files and Python in `.py` files, with all the correct highlighting, linting and maintainability that comes with it.
+
     - Write and run the *exact* SQL code you want
     - Use advanced SQL techniques such as
         - CTEs
@@ -15,11 +17,13 @@ With SQLpy you can work directly with advanced SQL from the comfort of your Pyth
 
 Party like it's ANSI 1999!
 ==========================
-SQL has been around since the mid 1970's in RDMS systems as the bedrock of many critical systems and applications. SQL is easy to start with but is quickly perceived as complex when you go beyond "SELECT * FROM table;". Especially in the age of web applications where the persistence layer (both relational and No-SQL) have been treated as simple stores of data, and are often behind abstraction wrappers that allow you to bring data in and out of your application. But when you need to do something a bit more custom with your data, you often find yourself needing to use SQL.  
+SQL has been around since the mid 1970's in RDMS systems as the bedrock of many critical systems and applications. SQL is easy to start with but is quickly perceived as complex when you go beyond ``"SELECT * FROM table;"``. Especially in the age of web applications where the persistence layer (both relational and No-SQL) have been treated as simple stores of data, and are often behind abstraction to bring data in and out of your application. But when you need to do something a bit more custom with your data, you often find yourself reaching to SQL.  
 
-However there has not really been a simple and straightforward way to do this directly from the application code itself. Having SQL strings dotted all over source files does not help maintainability or readability. The solution to using SQL directly from your application code is to... use SQL directly from your application code! Following from the original insight of `YeSQL`_, and learning from `anosql`_, SQLpy is the solution for working directly with SQL in Python projects.
+However there has not really been a simple and straightforward way to do this directly from the application code itself for large projects. Having SQL strings dotted all over source files does not help maintainability or readability. 
 
-Read more on background here: blog..coming soon
+The solution to using SQL directly from your application code is to... *use SQL directly from your application code!* Following from the original insight of `YeSQL`_, and learning from `anosql`_, SQLpy is the solution for working directly with SQL in Python projects.
+
+Read more on background here: blogpost..coming soon
 
 .. _YeSQL: https://github.com/krisajenkins/yesql/
 .. _anosql: https://github.com/honza/anosql
@@ -31,14 +35,15 @@ Installation
    
     $ pip install sqlpy
 
-You'll also need a Database DBAPI driver. See :ref:`compatibility`.
+You'll also need a Database DBAPI driver. See `compatibility`_.
 
 Quickstart
 ==========
+Full documentation can be found at `readthedocs <https://sqlpy.readthedocs.io>`_.
 
-Getting started is simple! All you need is a SQL database running and accessible to you. Let's take PostgreSQL as our example.
+Getting started is simple! All you need is a SQL database running and accessible to you. Let's assume a PostgreSQL database for our example.
 
-Assume we have a database table ```hello``` with the following data.
+Assume we have a database table ``hello`` with the following data.
 
 ====  ==========
  id    message
@@ -48,7 +53,7 @@ Assume we have a database table ```hello``` with the following data.
  3     PostgreSQL!
 ====  ==========
 
-First install sqlpy and psycopg2
+First install **sqlpy** and **psycopg2**
 
 .. code-block:: none
 
@@ -107,7 +112,7 @@ You can also pass variables to the query via format strings ``%s`` or pyformat s
 
     -- name: select_by_msg
     SELECT * FROM hello
-    WHERE is = %(msg)s;
+    WHERE id = %(msg)s;
 
 .. code-block:: python
 
@@ -120,20 +125,24 @@ You can also pass variables to the query via format strings ``%s`` or pyformat s
 
     [(2, u'SQLpy')]
 
-See the :ref:`fulldocs` for more.
+See the :ref:`howitworks` for more.
 
 .. _compatibility:
 
 Database Compatibility/Limitations
 ==================================
-SQLpy was written as a lightweight helper around your already existing Python `DB API 2.0`_ library, with no assumptions made about the underlying library of choice. Regarding support, as long as you write valid SQL for *your* database system and Python DB API library, then you should have no problems. For example PostgreSQL implements the ``RETURNING`` clause, this may be called something else or not implemented in a different system. So if you are using a With RETURNING query, then make sure you have the correct SQL syntax for your system.
+SQLpy was written as a lightweight helper around your already existing Python `DB API 2.0`_ library, with no assumptions made about the underlying library of choice.
+
+As long as you write valid SQL for *your* database system and Python DB API library, then you should have no problems.
+    
+    For example PostgreSQL implements the ``RETURNING`` clause, this may be called something else or not implemented in a different system. So if you are using a With RETURNING query, then make sure you have the correct SQL syntax for your system.
 
 Other explicit compatibility points detailed below.
 
 paramstyle
 ----------
 
-The DB API 2.0 specifies 5 types of `parameter style`_
+The Python DB API specifies 5 types of `parameter style`_
     - qmark: Question mark style, e.g. ...WHERE name=?
     - numeric: Numeric, positional style, e.g. ...WHERE name=:1
     - named: Named style, e.g. ...WHERE name=:name
@@ -186,7 +195,7 @@ Due to SQL parameter escaping (see `Bobby Tables`_), many DB API libraries won't
 
 .. code-block:: python
 
-    >> sql.SELECT_BY_ID(cur, 0, identifers=('id',), (1,))
+    >> sql.SELECT_BY_ID(cur, 0, identifiers=('id',), (1,))
 
     [(1, u'hello')]
 

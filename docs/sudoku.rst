@@ -1,6 +1,9 @@
-SQL is more than just a declarative data retrieval language, it's a fully Turing complete language in its own right. So it should be able to compute anything that a more *mainstream* language could...thought it may not be the most syntactically concise bit of code out there. SQL does shine in performing set operations, that is evaluating functions over groups (sets) of data (relations/tables) at once.
+Sudoku
+======
 
-Sets of data...numbers...grids. Did someone say Sudoku solver..? A 9x9 `Sudoku`_ solving SQL snippet was recently added to the postgresql wiki page. Using a recursive window function, it implements a brute-force backtracking algorithm to solve the puzzle. Taking up only 32 lines, which is not that important as SQL does not depend on whitespace heavily, it solves the example puzzle in 10 seconds on a standard quad-core laptop from 2014.
+SQL is more than just a declarative data retrieval language, it's a fully Turing complete language in its own right. So it should be able to compute anything that a more typical application language could...although it may not be the most syntactically concise bit of code out there. SQL does shine in performing set operations, that is evaluating functions over groups (sets) of data (relations/tables) all at once.
+
+Sets of data...numbers...grids. Did someone say Sudoku solver? A 9x9 `Sudoku`_ solving SQL snippet was recently added to the postgresql wiki page. Using a recursive window function, it implements a brute-force backtracking algorithm to solve the puzzle. Taking up only 32 lines, it could be less as SQL does not depend on whitespace heavily, it solves the example puzzle in under 10 seconds on a mid-range quad-core laptop from 2014 running postgres 9.6.
 
 .. _Sudoku: https://wiki.postgresql.org/wiki/Sudoku_solver
 
@@ -11,7 +14,7 @@ Imagine trying to program this to be done in SQL in a similar way but via an ORM
     -- name: sudoku_solver
     -- a sudoku solver
     -- in SQL why not
-    -- note query param %s 3 lines below
+    -- note the query param %s 3 lines below
     WITH recursive board(b, p) AS (
       -- sudoku board expressed in column-major order, so substr() can be used to fetch a column
       VALUES (%s::CHAR(81), 0)

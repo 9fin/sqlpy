@@ -95,7 +95,7 @@ html_theme_options = {
     'github_user': '9fin',
     'github_repo': 'sqlpy',
     'description': "it's just SQL",
-    'github_banner': True
+    'github_banner': False
 }
 
 # Add any paths that contain custom static files (such as style sheets) here,
