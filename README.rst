@@ -125,8 +125,6 @@ You can also pass variables to the query via format strings ``%s`` or pyformat s
 
     [(2, u'SQLpy')]
 
-See the :ref:`howitworks` for more.
-
 .. _compatibility:
 
 Database Compatibility/Limitations
