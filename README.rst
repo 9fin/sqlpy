@@ -23,7 +23,7 @@ However there has not really been a simple and straightforward way to do this di
 
 The solution to using SQL directly from your application code is to... *use SQL directly from your application code!* Following from the original insight of `YeSQL`_, and learning from `anosql`_, SQLpy is the solution for working directly with SQL in Python projects.
 
-Read more on background here: blogpost..coming soon
+Why SQLpy? Read more on background here: https://blog.9fin.com/post/sqlpy-0-2-0-is-here/
 
 .. _YeSQL: https://github.com/krisajenkins/yesql/
 .. _anosql: https://github.com/honza/anosql
