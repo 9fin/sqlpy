@@ -37,7 +37,7 @@ if sys.argv[-1] == 'publish':
 
 
 if sys.argv[-1] == 'test_publish':
-    os.system("twine upload -r testpypi dist/*")
+    os.system("twine upload --skip-existing -r testpypi dist/*")
     sys.exit()
 
 
