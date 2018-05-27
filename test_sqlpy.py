@@ -1,6 +1,7 @@
 from __future__ import print_function
 import pytest
 import os
+import glob
 import functools
 import psycopg2
 from sqlpy import Queries, load_queries, SQLLoadException,\
@@ -22,6 +23,11 @@ def queries_file():
 @pytest.fixture
 def queries_file_arr():
     return [os.path.join(os.getcwd(), 'test_queries.sql')]
+
+
+@pytest.fixture
+def queries_file_glob():
+    return glob.glob(os.path.join(os.getcwd(), '*.sql'))
 
 
 @pytest.fixture
@@ -230,6 +236,16 @@ class TestExec:
     def test_select_1(self, db_cur, sql_select_1):
         name, fcn = parse_sql_entry(sql_select_1)
         output = fcn(db_cur, 1)
+        assert output[0][0] == 1
+
+    def test_select_2(self, db_cur, queries_file):
+        sql = Queries(queries_file)
+        output = sql.TEST_SELECT(db_cur, 1)
+        assert output[0][0] == 1
+
+    def test_select_3(self, db_cur, queries_file_glob):
+        sql = Queries(queries_file_glob)
+        output = sql.TEST_SELECT_B(db_cur, 1)
         assert output[0][0] == 1
 
     def test_data1(self, db_cur, queries_file):
