@@ -3,7 +3,7 @@ import pytest
 import os
 import functools
 import psycopg2
-from sqlpy import Queries, load_queires, SQLLoadException,\
+from sqlpy import Queries, load_queries, SQLLoadException,\
     SQLParseException, SQLArgumentException, SQLpyException, parse_sql_entry, QueryType
 import logging
 
@@ -122,33 +122,33 @@ def db_cur():
 
 class TestLoad:
     def test_load(self, queries_file):
-        parsed = load_queires(queries_file)
+        parsed = load_queries(queries_file)
         assert isinstance(parsed, list)
 
     def test_load_arr(self, queries_file_arr):
-        parsed = load_queires(queries_file_arr)
+        parsed = load_queries(queries_file_arr)
         assert isinstance(parsed, list)
 
     def test_load_name(self, queries_file):
-        parsed = load_queires(queries_file)
+        parsed = load_queries(queries_file)
         assert parsed[0][0] == 'TEST_SELECT'
 
     def test_load_fcn(self, queries_file):
-        parsed = load_queires(queries_file)
+        parsed = load_queries(queries_file)
         assert isinstance(parsed[0][1], functools.partial)
 
     def test_load_fcn_name(self, queries_file):
-        parsed = load_queires(queries_file)
+        parsed = load_queries(queries_file)
         fcn = parsed[0][1]
         assert fcn.__name__ == 'TEST_SELECT'
 
     def test_load_fcn_doc(self, queries_file):
-        parsed = load_queires(queries_file)
+        parsed = load_queries(queries_file)
         fcn = parsed[0][1]
         assert fcn.__doc__ == 'testing the sqlpi module pls work\nsecond line comment'
 
     def test_load_fcn_querystring_fmt(self, queries_file):
-        parsed = load_queires(queries_file)
+        parsed = load_queries(queries_file)
         fcn = parsed[0][1]
         assert fcn.__query__ == """select *
 -- comment in middle
@@ -187,7 +187,7 @@ class TestExceptions:
         exc_msg = "[Errno No such file or directory] Could not find file: '{}'"\
                   .format(invalid_file_path)
         with pytest.raises(SQLLoadException, message=exc_msg):
-            load_queires(invalid_file_path)
+            load_queries(invalid_file_path)
 
     def test_parse_exception(self, invalid_sql_name_start):
         exc_msg = r'^Query does not start with "-- name:": .*'

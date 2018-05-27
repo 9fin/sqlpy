@@ -28,7 +28,7 @@ class Queries(object):
         self.available_queries = []
         global STRICT_BUILT_PARSE
         STRICT_BUILT_PARSE = strict_parse
-        for name, fn in load_queires(filepath):
+        for name, fn in load_queries(filepath):
             self.add_query(name, fn)
         logger.info('Found and loaded {} sql queires'.format(len(self.available_queries)))
 
@@ -330,7 +330,7 @@ def parse_queires_string(s):
     return [parse_sql_entry(expression.strip('\n')) for expression in s.split('\n\n') if expression]
 
 
-def load_queires(filepath):
+def load_queries(filepath):
     """Loads SQL statements as ``strings`` from files"""
     if type(filepath) != list:
         filepath = [filepath]
