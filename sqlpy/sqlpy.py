@@ -1,6 +1,7 @@
 from __future__ import print_function, absolute_import
 import os
-from .config import quote_ident, STRICT_BUILT_PARSE, LOG_QUERY_PARAMS, log_query, QueryType
+from .config import (quote_ident, STRICT_BUILT_PARSE, UPPERCASE_QUERY_NAME,
+                     LOG_QUERY_PARAMS, log_query, QueryType)
 from functools import partial
 from itertools import takewhile
 from .exceptions import (SQLpyException, SQLLoadException,
@@ -21,13 +22,17 @@ class Queries(object):
     Args:
         filepath (:obj:`list` of :obj:`str`): List of file locations containing
             the SQL statements.
-        strict_parse (:obj:`str`, optional): Weather to strictly enforce matching
+        strict_parse (:obj:`bool`, optional): Weather to strictly enforce matching
             the expected and supplied parameters to a SQL statement function.
+        uppercase_name (:obj:`bool`, optional): Weather to cast the names of the SQL
+            statement functions to uppercase.
     """
-    def __init__(self, filepath, strict_parse=False):
+    def __init__(self, filepath, strict_parse=False, uppercase_name=True):
         self.available_queries = []
         global STRICT_BUILT_PARSE
         STRICT_BUILT_PARSE = strict_parse
+        global UPPERCASE_QUERY_NAME
+        UPPERCASE_QUERY_NAME = uppercase_name
         for name, fn in load_queries(filepath):
             self.add_query(name, fn)
         logger.info('Found and loaded {} sql queires'.format(len(self.available_queries)))
@@ -61,7 +66,9 @@ def get_fn_name(line):
     Returns:
         :obj:`str`: Uppercase name of the SQL statement
     """
-    name = line.split('-- name:')[1].strip().upper()
+    name = line.split('-- name:')[1].strip()
+    if UPPERCASE_QUERY_NAME:
+        return name.upper()
     return name
 
 

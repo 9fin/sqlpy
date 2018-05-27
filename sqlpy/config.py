@@ -16,6 +16,10 @@ except ImportError:  # pragma: no cover
 #: matching the number of parameters supplied to the SQL code
 STRICT_BUILT_PARSE = False
 
+#: The default value for uppercasing the names of SQL queries
+#: prepared functions
+UPPERCASE_QUERY_NAME = True
+
 #: The default value for controlling logging of SQL
 #: query parameters in case of sensitive content
 LOG_QUERY_PARAMS = True
