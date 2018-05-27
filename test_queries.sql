@@ -87,3 +87,5 @@ and a.city_id = ci.city_id
 and ci.country_id = co.country_id
 and (co.country = ANY(%(countires)s) or first_name = %(extra_name)s)
 order by {} asc "EXCEPTION";
+
+
