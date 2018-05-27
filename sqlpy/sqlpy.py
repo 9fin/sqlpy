@@ -1,7 +1,7 @@
 from __future__ import print_function, absolute_import
 import os
 from .config import (quote_ident, STRICT_BUILT_PARSE, UPPERCASE_QUERY_NAME,
-                     LOG_QUERY_PARAMS, log_query, QueryType)
+                     LOG_QUERY_PARAMS, QueryType)
 from functools import partial
 from itertools import takewhile
 from .exceptions import (SQLpyException, SQLLoadException,
@@ -10,6 +10,16 @@ import logging
 
 # get the module logger
 logger = logging.getLogger(__name__)
+
+
+def log_query(query, args, kwargs, log_query_params):
+    """
+    Helper function to avoid repeating query log block
+    """
+    if logger.isEnabledFor(logging.DEBUG):
+        logger.debug('SQL: {}'.format(query))
+    if log_query_params:
+        logger.info('Arguments: {}'.format(kwargs if len(kwargs) > 0 else args))
 
 
 class Queries(object):
