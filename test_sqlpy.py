@@ -328,8 +328,8 @@ class TestExec:
         kwdata = {
             'country': 'MARS'
         }
-        output1 = sql.INSERT_COUNTRY(db_cur, **kwdata)
-        output2 = sql.DELETE_COUNTRY(db_cur, **kwdata)
+        output1 = sql.INSERT_COUNTRY(db_cur, kwdata)
+        output2 = sql.DELETE_COUNTRY(db_cur, kwdata)
         assert output1 and output2
 
     def test_data4(self, db_cur, queries_file, caplog):
@@ -338,7 +338,7 @@ class TestExec:
             'countires': ['United States'],
             'extra_name': 'BEN'
         }
-        output, _ = sql.CUSTOMERS_OR_STAFF_IN_COUNTRY(db_cur, **kwdata)
+        output, _ = sql.CUSTOMERS_OR_STAFF_IN_COUNTRY(db_cur, kwdata)
         assert len(output) == 37
         assert "'countires': ['United States']" in caplog.text
 
@@ -349,7 +349,7 @@ class TestExec:
             'extra_name': 'BEN',
             'unmatched_arg_trigger': True
         }
-        output, _ = sql.CUSTOMERS_OR_STAFF_IN_COUNTRY(db_cur, **kwdata)
+        output, _ = sql.CUSTOMERS_OR_STAFF_IN_COUNTRY(db_cur, kwdata)
         assert len(output) == 37
 
     def test_data5(self, db_cur, queries_file):
@@ -358,7 +358,7 @@ class TestExec:
             'countires': ['United States'],
             'extra_name': 'BEN'
         }
-        output, _ = sql.CUSTOMERS_OR_STAFF_IN_COUNTRY(db_cur, n=1, **kwdata)
+        output, _ = sql.CUSTOMERS_OR_STAFF_IN_COUNTRY(db_cur, kwdata, n=1)
         assert len(output) == 3
 
     def test_data5_1(self, db_cur, queries_file):
@@ -370,7 +370,7 @@ class TestExec:
                 'extra_name': 'BEN',
                 'extra_param': 'I should not be here'
             }
-            sql.CUSTOMERS_OR_STAFF_IN_COUNTRY(db_cur, n=1, **kwdata)
+            sql.CUSTOMERS_OR_STAFF_IN_COUNTRY(db_cur, kwdata, n=1)
 
     def test_data5_2(self, db_cur, queries_file):
         sql = Queries(queries_file)
@@ -378,7 +378,7 @@ class TestExec:
             'countires': ['United States'],
             'extra_name': 'BEN'
         }
-        output, _ = sql.CUSTOMERS_OR_STAFF_IN_COUNTRY(db_cur, n=3, **kwdata)
+        output, _ = sql.CUSTOMERS_OR_STAFF_IN_COUNTRY(db_cur, kwdata, n=3)
         assert len(output) == 3
 
     def test_data6(self, db_cur, queries_file):
@@ -388,7 +388,7 @@ class TestExec:
             'extra_name': 'BEN'
         }
         identifiers = ('country',)
-        output, _ = sql.CUSTOMERS_OR_STAFF_IN_COUNTRY_SORT(db_cur, n=1, identifiers=identifiers, **kwdata)
+        output, _ = sql.CUSTOMERS_OR_STAFF_IN_COUNTRY_SORT(db_cur, kwdata, n=1, identifiers=identifiers)
         assert output == ('BEN', 'EASTER', 'Russian Federation')
 
     def test_proc1(self, db_cur, queries_file):
@@ -434,8 +434,8 @@ class TestExecExcept:
             kwdata = {
                 'country': 'MARS'
             }
-            sql.INSERT_COUNTRY_EXP(db_cur, **kwdata)
-            sql.DELETE_COUNTRY_EXP(db_cur, **kwdata)
+            sql.INSERT_COUNTRY_EXP(db_cur, kwdata)
+            sql.DELETE_COUNTRY_EXP(db_cur, kwdata)
 
     def test_data4(self, db_cur, queries_file):
         with pytest.raises(psycopg2.Error):
@@ -444,7 +444,7 @@ class TestExecExcept:
                 'countires': ['United States'],
                 'extra_name': 'BEN'
             }
-            sql.CUSTOMERS_OR_STAFF_IN_COUNTRY_EXP(db_cur, **kwdata)
+            sql.CUSTOMERS_OR_STAFF_IN_COUNTRY_EXP(db_cur, kwdata)
 
     def test_data5(self, db_cur, queries_file):
         with pytest.raises(psycopg2.Error):
@@ -453,7 +453,7 @@ class TestExecExcept:
                 'countires': ['United States'],
                 'extra_name': 'BEN'
             }
-            sql.CUSTOMERS_OR_STAFF_IN_COUNTRY_EXP(db_cur, n=1, **kwdata)
+            sql.CUSTOMERS_OR_STAFF_IN_COUNTRY_EXP(db_cur, kwdata, n=1)
 
     def test_data6(self, db_cur, queries_file):
         with pytest.raises(psycopg2.Error):
@@ -463,7 +463,7 @@ class TestExecExcept:
                 'extra_name': 'BEN'
             }
             identifiers = ('country',)
-            sql.CUSTOMERS_OR_STAFF_IN_COUNTRY_SORT_EXP(db_cur, n=1, identifiers=identifiers, **kwdata)
+            sql.CUSTOMERS_OR_STAFF_IN_COUNTRY_SORT_EXP(db_cur, kwdata, n=1, identifiers=identifiers)
 
     def test_data7(self, db_cur, queries_file):
         with pytest.raises(SQLpyException):
@@ -495,3 +495,10 @@ class TestExecExcept:
             data = (('Jeff', 'Goldblum'), ('Jeff', 'Goldblum'))
             output, _ = sql.INSERT_ACTORS(db_cur, data, many=True, n='2')
             assert output == [('Jeff', 'Goldblum'), ('Jeff', 'Goldblum')]
+
+    def test_data10(self, db_cur, queries_file):
+        with pytest.raises(SQLpyException):
+            sql = Queries(queries_file)
+            kwdata = (['United States'], 'BEN')
+            output, _ = sql.CUSTOMERS_OR_STAFF_IN_COUNTRY(db_cur, kwdata)
+            assert len(output) == 37
