@@ -257,6 +257,7 @@ class QueryFnFactory:
                 except Exception as e:
                     logger.error('Exception Type "{}" raised, on executing query "{}"\n____\n{}\n____'
                                  .format(type(e), name, query), exc_info=True)
+                    raise
                 else:
                     return True, cur
 
@@ -264,7 +265,7 @@ class QueryFnFactory:
 
         elif sql_type == QueryType.RETURN_ID:
             def fn(query, cur, args=None, n=None, many=None, identifiers=None, log_query_params=LOG_QUERY_PARAMS, **kwargs):
-                if n and not isinstance(n, int) and n < 1:
+                if n and (not isinstance(n, int) or n < 1):
                     raise SQLpyException('"n" must be an Integer >= 1')
                 if identifiers:
                     if not quote_ident:
@@ -283,6 +284,7 @@ class QueryFnFactory:
                 except Exception as e:
                     logger.error('Exception Type "{}" raised, on executing query "{}"\n____\n{}\n____'
                                  .format(type(e), name, query), exc_info=True)
+                    raise
                 else:
                     if not n:
                         return cur.fetchall(), cur
@@ -295,7 +297,7 @@ class QueryFnFactory:
 
         elif sql_type == QueryType.CALL_PROC:
             def fn(query, cur, args=None, n=None, identifiers=None, log_query_params=LOG_QUERY_PARAMS, **kwargs):
-                if n and not isinstance(n, int) and n < 1:
+                if n and (not isinstance(n, int) or n < 1):
                     raise SQLpyException('"n" must be an Integer >= 1')
                 if identifiers:
                     if not quote_ident:
@@ -309,6 +311,7 @@ class QueryFnFactory:
                 except Exception as e:
                     logger.error('Exception Type "{}" raised, on executing procedure "{}"\n____\n{}\n____'
                                  .format(type(e), name, query), exc_info=True)
+                    raise
                 else:
                     if not n:
                         return cur.fetchall(), cur
@@ -321,7 +324,7 @@ class QueryFnFactory:
 
         elif sql_type == QueryType.SELECT:
             def fn(query, cur, args=None, n=None, identifiers=None, log_query_params=LOG_QUERY_PARAMS, **kwargs):
-                if n and not isinstance(n, int) and n < 1:
+                if n and (not isinstance(n, int) or n < 1):
                     raise SQLpyException('"n" must be an Integer >= 1')
                 if identifiers:
                     if not quote_ident:
@@ -335,6 +338,7 @@ class QueryFnFactory:
                 except Exception as e:
                     logger.error('Exception Type "{}" raised, on executing query "{}"\n____\n{}\n____'
                                  .format(type(e), name, query), exc_info=True)
+                    raise
                 else:
                     if not n:
                         return cur.fetchall(), cur
@@ -347,7 +351,7 @@ class QueryFnFactory:
 
         elif sql_type == QueryType.SELECT_BUILT:
             def fn(query, query_dict, query_arr, cur, args=None, n=None, identifiers=None, log_query_params=LOG_QUERY_PARAMS, **kwargs):
-                if n and not isinstance(n, int) and n < 1:
+                if n and (not isinstance(n, int) or n < 1):
                     raise SQLpyException('"n" must be an Integer >= 1')
                 logger.info('Executing: {}'.format(name))
                 query_built = ''
@@ -389,6 +393,7 @@ class QueryFnFactory:
                 except Exception as e:
                     logger.error('Exception Type "{}" raised, on executing query "{}"\n____\n{}\n____'
                                  .format(type(e), name, query_built), exc_info=True)
+                    raise
                 else:
                     if not n:
                         return cur.fetchall(), cur
