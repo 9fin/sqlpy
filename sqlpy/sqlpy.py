@@ -240,7 +240,7 @@ class QueryFnFactory:
 
         if sql_type == QueryType.INSERT_UPDATE_DELETE:
             def fn(query, cur, args=None, many=None, identifiers=None, log_query_params=LOG_QUERY_PARAMS, **kwargs):
-                if identifiers:
+                if identifiers:  # pragma: no cover
                     if not quote_ident:
                         raise SQLpyException('"quote_ident" is not supported')
                     identifiers = list(quote_ident(i, cur) for i in identifiers)
@@ -267,7 +267,7 @@ class QueryFnFactory:
             def fn(query, cur, args=None, n=None, many=None, identifiers=None, log_query_params=LOG_QUERY_PARAMS, **kwargs):
                 if n and (not isinstance(n, int) or n < 1):
                     raise SQLpyException('"n" must be an Integer >= 1')
-                if identifiers:
+                if identifiers:  # pragma: no cover
                     if not quote_ident:
                         raise SQLpyException('"quote_ident" is not supported')
                     identifiers = list(quote_ident(i, cur) for i in identifiers)
@@ -299,7 +299,7 @@ class QueryFnFactory:
             def fn(query, cur, args=None, n=None, identifiers=None, log_query_params=LOG_QUERY_PARAMS, **kwargs):
                 if n and (not isinstance(n, int) or n < 1):
                     raise SQLpyException('"n" must be an Integer >= 1')
-                if identifiers:
+                if identifiers:  # pragma: no cover
                     if not quote_ident:
                         raise SQLpyException('"quote_ident" is not supported')
                     identifiers = list(quote_ident(i, cur) for i in identifiers)
@@ -326,7 +326,7 @@ class QueryFnFactory:
             def fn(query, cur, args=None, n=None, identifiers=None, log_query_params=LOG_QUERY_PARAMS, **kwargs):
                 if n and (not isinstance(n, int) or n < 1):
                     raise SQLpyException('"n" must be an Integer >= 1')
-                if identifiers:
+                if identifiers:  # pragma: no cover
                     if not quote_ident:
                         raise SQLpyException('"quote_ident" is not supported')
                     identifiers = list(quote_ident(i, cur) for i in identifiers)
@@ -382,7 +382,7 @@ class QueryFnFactory:
                 for q in query_built_arr:
                     if q.get('query_line') not in query_built:
                         query_built = "{}\n{}".format(query_built, q.get('query_line'))
-                if identifiers:
+                if identifiers:  # pragma: no cover
                     if not quote_ident:
                         raise SQLpyException('"quote_ident" is not supported')
                     identifiers = list(quote_ident(i, cur) for i in identifiers)
