@@ -188,8 +188,10 @@ class TestQuery:
         assert len(sql.TEST_SELECT.args) == 1
 
 
+@pytest.mark.usefixtures("enable_logging")
 class TestInitLogging:
     def test_logging(self, queries_file, caplog):
+        caplog.set_level(logging.DEBUG)
         Queries(queries_file)
         for record in caplog.records:
             assert record.levelname == 'INFO'
@@ -278,18 +280,21 @@ class TestExec:
         assert len(output) == 2
 
     def test_data1_2(self, db_cur, queries_file, caplog):
+        caplog.set_level(logging.DEBUG)
         sql = Queries(queries_file)
         data = ('BEN',)
         sql.GET_ACTORS_BY_FIRST_NAME(db_cur, data, n=1, log_query_params=False)
         assert "INFO Arguments: ('BEN',)" not in caplog.text
 
     def test_data1_3(self, db_cur, queries_file, caplog):
+        caplog.set_level(logging.DEBUG)
         sql = Queries(queries_file)
         data = ('BEN',)
         sql.GET_ACTORS_BY_FIRST_NAME(db_cur, data, n=1)
         assert "INFO Arguments: ('BEN',)" in caplog.text
 
     def test_data2(self, db_cur, queries_file, caplog):
+        caplog.set_level(logging.DEBUG)
         sql = Queries(queries_file)
         data = ('Jeff', 'Goldblum', 'Jeff', 'Goldblum')
         output, _ = sql.INSERT_ACTOR(db_cur, data, n=1)
@@ -333,6 +338,7 @@ class TestExec:
         assert output1 and output2
 
     def test_data4(self, db_cur, queries_file, caplog):
+        caplog.set_level(logging.DEBUG)
         sql = Queries(queries_file)
         kwdata = {
             'countires': ['United States'],
