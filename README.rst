@@ -23,10 +23,11 @@ However there has not really been a simple and straightforward way to do this di
 
 The solution to using SQL directly from your application code is to... *use SQL directly from your application code!* Following from the original insight of `YeSQL`_, and learning from `anosql`_, SQLpy is the solution for working directly with SQL in Python projects.
 
-Why SQLpy? Read more on background here: https://blog.9fin.com/post/sqlpy-0-2-0-is-here/
+Why SQLpy? Read more on background here: `SQLpy Blog`_
 
 .. _YeSQL: https://github.com/krisajenkins/yesql/
 .. _anosql: https://github.com/honza/anosql
+.. _SQLpy Blog: https://blog.9fin.com/post/sqlpy-0-2-0-is-here/
 
 Installation
 ============
@@ -59,7 +60,7 @@ First install **sqlpy** and **psycopg2**
 
     $ pip install sqlpy psycopg2
 
-Create a `queries.sql` file in your project directory, containing the following
+Create a `queries.sql` file in your project directory, containing the following. (The name of the SQL snippet is how to link the query to the Python code.)
 
 .. code-block:: sql
 
@@ -71,7 +72,7 @@ Set up the application and run
 
 .. code-block:: python
     
-    from __future__ import print_function
+    from __future__ import print_function  # Python 2-3 compatibility
     from sqlpy import Queries
     import psycopg2
 
@@ -90,7 +91,7 @@ Set up the application and run
 
     with db:
         with db.cursor() as cur:
-            output = sql.TEST_SELECT(cur, 0)
+            output = sql.TEST_SELECT(cur)
 
     print(output)
 
@@ -116,12 +117,12 @@ You can also pass variables to the query via format strings ``%s`` or pyformat s
 
 .. code-block:: python
 
-    >> sql.SELECT_BY_ID(cur, 0, (1,))
+    >> sql.SELECT_BY_ID(cur, (1,))
 
     [(1, u'hello')]
 
     >> kwargs = {'msg': 'SQLpy'}
-    >> sql.SELECT_BY_MSG(cur, 0, **kwargs)
+    >> sql.SELECT_BY_MSG(cur, kwargs)
 
     [(2, u'SQLpy')]
 
@@ -193,7 +194,7 @@ Due to SQL parameter escaping (see `Bobby Tables`_), many DB API libraries won't
 
 .. code-block:: python
 
-    >> sql.SELECT_BY_ID(cur, 0, identifiers=('id',), (1,))
+    >> sql.SELECT_BY_ID(cur, identifiers=('id',), (1,))
 
     [(1, u'hello')]
 

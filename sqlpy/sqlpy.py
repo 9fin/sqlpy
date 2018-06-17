@@ -30,8 +30,8 @@ class Queries(object):
     methods.
 
     Args:
-        filepath (:obj:`list` of :obj:`str`): List of file locations containing
-            the SQL statements.
+        filepath (:obj:`list` of :obj:`str` or :obj:`str`): List of file locations containing
+            the SQL statements or a single filepath to the queries file.
         strict_parse (:obj:`bool`, optional): Weather to strictly enforce matching
             the expected and supplied parameters to a SQL statement function.
         uppercase_name (:obj:`bool`, optional): Weather to cast the names of the SQL
