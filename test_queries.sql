@@ -21,11 +21,19 @@ from public.actor
 where first_name = %s
 order by actor_id;
 
--- name: insert_actor<!>
+-- name: pre_clear_actor!
 delete from public.actor where first_name = %s and last_name = %s;
+
+-- name: insert_actor<!>
 insert into public.actor (first_name, last_name)
 values (%s, %s)
 RETURNING first_name, last_name;
+
+-- name: delete_actors!
+delete from public.actor where first_name = %s and last_name = %s;
+
+-- name: insert_actors<!>
+insert into public.actor (first_name, last_name) values %s RETURNING first_name, last_name;
 
 -- name: insert_country!
 insert into public.country (country) values (%(country)s);
@@ -87,3 +95,10 @@ and a.city_id = ci.city_id
 and ci.country_id = co.country_id
 and (co.country = ANY(%(countires)s) or first_name = %(extra_name)s)
 order by {} asc "EXCEPTION";
+
+
+-- name: inventory_check@
+film_in_stock
+
+-- name: inventory_check_exp@
+film_in_stock "EXCEPTION"

@@ -1,6 +1,7 @@
 from __future__ import print_function, absolute_import
 import os
-from .config import quote_ident, STRICT_BUILT_PARSE, LOG_QUERY_PARAMS, log_query, QueryType
+from .config import (quote_ident, STRICT_BUILT_PARSE, UPPERCASE_QUERY_NAME,
+                     LOG_QUERY_PARAMS, QueryType, execute_values)
 from functools import partial
 from itertools import takewhile
 from .exceptions import (SQLpyException, SQLLoadException,
@@ -11,6 +12,16 @@ import logging
 logger = logging.getLogger(__name__)
 
 
+def log_query(query, args, log_query_params):
+    """
+    Helper function to avoid repeating query log block
+    """
+    if logger.isEnabledFor(logging.DEBUG):
+        logger.debug('SQL: {}'.format(query))
+    if log_query_params:
+        logger.info('Arguments: {}'.format(args))
+
+
 class Queries(object):
     """
     Builds the prepared functions of SQL statements for execution.
@@ -19,16 +30,20 @@ class Queries(object):
     methods.
 
     Args:
-        filepath (:obj:`list` of :obj:`str`): List of file locations containing
-            the SQL statements.
-        strict_parse (:obj:`str`, optional): Weather to strictly enforce matching
+        filepath (:obj:`list` of :obj:`str` or :obj:`str`): List of file locations containing
+            the SQL statements or a single filepath to the queries file.
+        strict_parse (:obj:`bool`, optional): Weather to strictly enforce matching
             the expected and supplied parameters to a SQL statement function.
+        uppercase_name (:obj:`bool`, optional): Weather to cast the names of the SQL
+            statement functions to uppercase.
     """
-    def __init__(self, filepath, strict_parse=False):
+    def __init__(self, filepath, strict_parse=False, uppercase_name=True):
         self.available_queries = []
         global STRICT_BUILT_PARSE
         STRICT_BUILT_PARSE = strict_parse
-        for name, fn in load_queires(filepath):
+        global UPPERCASE_QUERY_NAME
+        UPPERCASE_QUERY_NAME = uppercase_name
+        for name, sql_type, fn in load_queries(filepath):
             self.add_query(name, fn)
         logger.info('Found and loaded {} sql queires'.format(len(self.available_queries)))
 
@@ -61,7 +76,9 @@ def get_fn_name(line):
     Returns:
         :obj:`str`: Uppercase name of the SQL statement
     """
-    name = line.split('-- name:')[1].strip().upper()
+    name = line.split('-- name:')[1].strip()
+    if UPPERCASE_QUERY_NAME:
+        return name.upper()
     return name
 
 
@@ -191,6 +208,9 @@ def parse_sql_entry(entry):
     elif '!' in name:
         sql_type = QueryType.INSERT_UPDATE_DELETE
         name = name.replace('!', '')
+    elif '@' in name:
+        sql_type = QueryType.CALL_PROC
+        name = name.replace('@', '')
     elif '$' in name:
         sql_type = QueryType.SELECT_BUILT
         name = name.replace('$', '')
@@ -209,120 +229,190 @@ def parse_sql_entry(entry):
         query_arr, query_dict = built_query_tuple(query)
     query = '\n'.join(query)
 
-    def fn(query, query_dict, query_arr, sql_type, cur, fetch_n, args=None, identifiers=None, log_query_params=LOG_QUERY_PARAMS, **kwargs):
-        if fetch_n and not isinstance(fetch_n, int):
-            raise SQLpyException('"fetch_n" must be an Integer >= 0')
-        if fetch_n < 0:
-            raise SQLpyException('"fetch_n" must be >= 0')
-        logger.info('Executing: {}'.format(name))
-        results = None
-        if identifiers:
-            if not quote_ident:
-                raise SQLpyException('"quote_ident" is not supported')
-            identifiers = list(quote_ident(i, cur) for i in identifiers)
-            query = query.format(*identifiers)
-        if sql_type == QueryType.RETURN_ID:
-            log_query(query, args, kwargs, log_query_params)
-            try:
-                cur.execute(query, kwargs if len(kwargs) > 0 else args)
-            except Exception as e:
-                logger.error('Exception Type "{}" raised, on executing query "{}"\n____\n{}\n____'
-                             .format(type(e), name, query), exc_info=True)
-                raise
-            else:
-                if fetch_n:
-                    results = cur.fetchmany(fetch_n)
-                else:
-                    results = cur.fetchall()
+    fn_partial = QueryFnFactory.make_query(query, query_dict, query_arr, sql_type, name, doc)
+
+    return name, sql_type, fn_partial
+
+
+class QueryFnFactory:
+    @staticmethod
+    def make_query(query, query_dict, query_arr, sql_type, name, doc):
+
         if sql_type == QueryType.INSERT_UPDATE_DELETE:
-            log_query(query, args, kwargs, log_query_params)
-            try:
-                cur.execute(query, kwargs if len(kwargs) > 0 else args)
-            except Exception as e:
-                logger.error('Exception Type "{}" raised, on executing query "{}"\n____\n{}\n____'
-                             .format(type(e), name, query), exc_info=True)
-                raise
-            else:
-                results = True
-        if sql_type == QueryType.SELECT and not fetch_n:
-            log_query(query, args, kwargs, log_query_params)
-            try:
-                cur.execute(query, kwargs if len(kwargs) > 0 else args)
-            except Exception as e:
-                logger.error('Exception Type "{}" raised, on executing query "{}"\n____\n{}\n____'
-                             .format(type(e), name, query), exc_info=True)
-                raise
-            else:
-                results = cur.fetchall()
-        elif sql_type == QueryType.SELECT and fetch_n:
-            log_query(query, args, kwargs, log_query_params)
-            try:
-                cur.execute(query, kwargs if len(kwargs) > 0 else args)
-            except Exception as e:
-                logger.error('Exception Type "{}" raised, on executing query "{}"\n____\n{}\n____'
-                             .format(type(e), name, query), exc_info=True)
-                raise
-            else:
-                results = cur.fetchmany(fetch_n)
-        if sql_type == QueryType.SELECT_BUILT:
-            query_built = ''
-            query_args_set = set()
-            # throw all the non arg containing lines in first
-            noarg_idx = query_dict.get('#')
-            query_built_arr = list(query_arr[idx]['#'] for idx in noarg_idx)
-            # now add lines with args into the mix
-            for key, value in kwargs.items():
-                arg_idx = query_dict.get(key)
-                if arg_idx:
-                    # check if dict line item has already been added
-                    if query_arr[arg_idx][key] not in query_built_arr:
-                        query_built_arr.append(query_arr[arg_idx][key])
-                        # add the args required by this line to tracker
-                        query_args_set.update(parse_args(query_arr[arg_idx][key]['query_line']))
-                else:
-                    if STRICT_BUILT_PARSE:
-                        raise SQLArgumentException('Named argument supplied which does not match a SQL clause: ', key=key)
-            # do a diff of the keys in input kwargs and query_built
-            # set anything missing to None
-            diff = arg_key_diff(query_args_set, set(kwargs.keys()))
-            if diff:
-                for key in diff:
-                    kwargs.setdefault(key, None)
-            # sort the final built up query array and reduce query into string
-            query_built_arr = sorted(query_built_arr, key=lambda x: x.get('idx'))
-            for q in query_built_arr:
-                if q.get('query_line') not in query_built:
-                    query_built = "{}\n{}".format(query_built, q.get('query_line'))
-            if fetch_n:
-                log_query(query_built, args, kwargs, log_query_params)
+            def fn(query, cur, args=tuple(), many=None, identifiers=None, log_query_params=LOG_QUERY_PARAMS, **kwargs):
+                if identifiers:  # pragma: no cover
+                    if not quote_ident:
+                        raise SQLpyException('"quote_ident" is not supported')
+                    identifiers = list(quote_ident(i, cur) for i in identifiers)
+                    query = query.format(*identifiers)
+                logger.info('Executing: {}'.format(name))
+                log_query(query, args, log_query_params)
                 try:
-                    cur.execute(query_built, kwargs)
+                    if many and execute_values:
+                        execute_values(cur, query, args)
+                    elif many and not execute_values:
+                        cur.executemany(query, args)
+                    else:
+                        cur.execute(query, args)
                 except Exception as e:
                     logger.error('Exception Type "{}" raised, on executing query "{}"\n____\n{}\n____'
                                  .format(type(e), name, query), exc_info=True)
                     raise
                 else:
-                    results = cur.fetchmany(fetch_n)
-            else:
-                log_query(query_built, args, kwargs, log_query_params)
+                    return True, cur
+
+            fn_partial = partial(fn, query)
+
+        elif sql_type == QueryType.RETURN_ID:
+            def fn(query, cur, args=tuple(), n=None, many=None, identifiers=None, log_query_params=LOG_QUERY_PARAMS, **kwargs):
+                if n and (not isinstance(n, int) or n < 1):
+                    raise SQLpyException('"n" must be an Integer >= 1')
+                if identifiers:  # pragma: no cover
+                    if not quote_ident:
+                        raise SQLpyException('"quote_ident" is not supported')
+                    identifiers = list(quote_ident(i, cur) for i in identifiers)
+                    query = query.format(*identifiers)
+                logger.info('Executing: {}'.format(name))
+                log_query(query, args, log_query_params)
                 try:
-                    cur.execute(query_built, kwargs)
+                    if many and execute_values:
+                        execute_values(cur, query, args)
+                    elif many and not execute_values:
+                        cur.executemany(query, args)
+                    else:
+                        cur.execute(query, args)
                 except Exception as e:
                     logger.error('Exception Type "{}" raised, on executing query "{}"\n____\n{}\n____'
                                  .format(type(e), name, query), exc_info=True)
                     raise
                 else:
-                    results = cur.fetchall()
-        return results
+                    if not n:
+                        return cur.fetchall(), cur
+                    if n == 1:
+                        return cur.fetchone(), cur
+                    else:
+                        return cur.fetchmany(n), cur
 
-    fn_partial = partial(fn, query, query_dict, query_arr, sql_type)
+            fn_partial = partial(fn, query)
 
-    fn_partial.__doc__ = doc
-    fn_partial.__query__ = query
-    fn_partial.__name__ = name
-    fn_partial.func_name = name
+        elif sql_type == QueryType.CALL_PROC:
+            def fn(query, cur, args=tuple(), n=None, identifiers=None, log_query_params=LOG_QUERY_PARAMS, **kwargs):
+                if n and (not isinstance(n, int) or n < 1):
+                    raise SQLpyException('"n" must be an Integer >= 1')
+                if identifiers:  # pragma: no cover
+                    if not quote_ident:
+                        raise SQLpyException('"quote_ident" is not supported')
+                    identifiers = list(quote_ident(i, cur) for i in identifiers)
+                    query = query.format(*identifiers)
+                logger.info('Executing: {}'.format(name))
+                log_query(query, args, log_query_params)
+                try:
+                    cur.callproc(query, args)
+                except Exception as e:
+                    logger.error('Exception Type "{}" raised, on executing procedure "{}"\n____\n{}\n____'
+                                 .format(type(e), name, query), exc_info=True)
+                    raise
+                else:
+                    if not n:
+                        return cur.fetchall(), cur
+                    if n == 1:
+                        return cur.fetchone(), cur
+                    else:
+                        return cur.fetchmany(n), cur
 
-    return name, fn_partial
+            fn_partial = partial(fn, query)
+
+        elif sql_type == QueryType.SELECT:
+            def fn(query, cur, args=tuple(), n=None, identifiers=None, log_query_params=LOG_QUERY_PARAMS, **kwargs):
+                if n and (not isinstance(n, int) or n < 1):
+                    raise SQLpyException('"n" must be an Integer >= 1')
+                if identifiers:  # pragma: no cover
+                    if not quote_ident:
+                        raise SQLpyException('"quote_ident" is not supported')
+                    identifiers = list(quote_ident(i, cur) for i in identifiers)
+                    query = query.format(*identifiers)
+                logger.info('Executing: {}'.format(name))
+                log_query(query, args, log_query_params)
+                try:
+                    cur.execute(query, args)
+                except Exception as e:
+                    logger.error('Exception Type "{}" raised, on executing query "{}"\n____\n{}\n____'
+                                 .format(type(e), name, query), exc_info=True)
+                    raise
+                else:
+                    if not n:
+                        return cur.fetchall(), cur
+                    if n == 1:
+                        return cur.fetchone(), cur
+                    else:
+                        return cur.fetchmany(n), cur
+
+            fn_partial = partial(fn, query)
+
+        elif sql_type == QueryType.SELECT_BUILT:
+            def fn(query, query_dict, query_arr, cur, args=dict(), n=None, identifiers=None, log_query_params=LOG_QUERY_PARAMS, **kwargs):
+                if n and (not isinstance(n, int) or n < 1):
+                    raise SQLpyException('"n" must be an Integer >= 1')
+                if not isinstance(args, dict):
+                    raise SQLpyException('Only dict args are supported for built SQL. {} supplied'
+                                         .format(type(args)))
+                logger.info('Executing: {}'.format(name))
+                query_built = ''
+                query_args_set = set()
+                # throw all the non arg containing lines in first
+                noarg_idx = query_dict.get('#')
+                query_built_arr = list(query_arr[idx]['#'] for idx in noarg_idx)
+                # now add lines with args into the mix
+                for key, value in args.items():
+                    arg_idx = query_dict.get(key)
+                    if arg_idx:
+                        # check if dict line item has already been added
+                        if query_arr[arg_idx][key] not in query_built_arr:
+                            query_built_arr.append(query_arr[arg_idx][key])
+                            # add the args required by this line to tracker
+                            query_args_set.update(parse_args(query_arr[arg_idx][key]['query_line']))
+                    else:
+                        if STRICT_BUILT_PARSE:
+                            raise SQLArgumentException('Named argument supplied which does not match a SQL clause: ', key=key)
+                # do a diff of the keys in input args and query_built
+                # set anything missing to None
+                diff = arg_key_diff(query_args_set, set(args.keys()))
+                if diff:
+                    for key in diff:
+                        args.setdefault(key, None)
+                # sort the final built up query array and reduce query into string
+                query_built_arr = sorted(query_built_arr, key=lambda x: x.get('idx'))
+                for q in query_built_arr:
+                    if q.get('query_line') not in query_built:
+                        query_built = "{}\n{}".format(query_built, q.get('query_line'))
+                if identifiers:  # pragma: no cover
+                    if not quote_ident:
+                        raise SQLpyException('"quote_ident" is not supported')
+                    identifiers = list(quote_ident(i, cur) for i in identifiers)
+                    query_built = query_built.format(*identifiers)
+                log_query(query_built, args, log_query_params)
+                try:
+                    cur.execute(query_built, args)
+                except Exception as e:
+                    logger.error('Exception Type "{}" raised, on executing query "{}"\n____\n{}\n____'
+                                 .format(type(e), name, query_built), exc_info=True)
+                    raise
+                else:
+                    if not n:
+                        return cur.fetchall(), cur
+                    if n == 1:
+                        return cur.fetchone(), cur
+                    else:
+                        return cur.fetchmany(n), cur
+
+            fn_partial = partial(fn, query, query_dict, query_arr)
+
+        fn_partial.__doc__ = doc
+        fn_partial.__query__ = query
+        fn_partial.__name__ = name
+        fn_partial.func_name = name
+
+        return fn_partial
 
 
 def parse_queires_string(s):
@@ -330,7 +420,7 @@ def parse_queires_string(s):
     return [parse_sql_entry(expression.strip('\n')) for expression in s.split('\n\n') if expression]
 
 
-def load_queires(filepath):
+def load_queries(filepath):
     """Loads SQL statements as ``strings`` from files"""
     if type(filepath) != list:
         filepath = [filepath]
@@ -339,5 +429,5 @@ def load_queires(filepath):
         if not os.path.exists(file):
             raise SQLLoadException('Could not find file', file)
         with open(file, 'rU') as queries_file:
-            f = f + '\n' + queries_file.read()
+            f = f + '\n\n' + queries_file.read().strip('\n')
     return parse_queires_string(f)

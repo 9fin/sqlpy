@@ -1,9 +1,10 @@
 from __future__ import print_function
 import pytest
 import os
+import glob
 import functools
 import psycopg2
-from sqlpy import Queries, load_queires, SQLLoadException,\
+from sqlpy import Queries, load_queries, SQLLoadException,\
     SQLParseException, SQLArgumentException, SQLpyException, parse_sql_entry, QueryType
 import logging
 
@@ -22,6 +23,11 @@ def queries_file():
 @pytest.fixture
 def queries_file_arr():
     return [os.path.join(os.getcwd(), 'test_queries.sql')]
+
+
+@pytest.fixture
+def queries_file_glob():
+    return glob.glob(os.path.join(os.getcwd(), '*.sql'))
 
 
 @pytest.fixture
@@ -98,6 +104,14 @@ AND col_1 = %(val_1)s
 
 
 @pytest.fixture
+def sql_proc():
+        return """
+-- name: test_proc_call@
+example_fcn_name
+""".strip('\n')
+
+
+@pytest.fixture
 def sql_select_1():
     return """
 -- name: select_1
@@ -122,34 +136,34 @@ def db_cur():
 
 class TestLoad:
     def test_load(self, queries_file):
-        parsed = load_queires(queries_file)
+        parsed = load_queries(queries_file)
         assert isinstance(parsed, list)
 
     def test_load_arr(self, queries_file_arr):
-        parsed = load_queires(queries_file_arr)
+        parsed = load_queries(queries_file_arr)
         assert isinstance(parsed, list)
 
     def test_load_name(self, queries_file):
-        parsed = load_queires(queries_file)
+        parsed = load_queries(queries_file)
         assert parsed[0][0] == 'TEST_SELECT'
 
     def test_load_fcn(self, queries_file):
-        parsed = load_queires(queries_file)
-        assert isinstance(parsed[0][1], functools.partial)
+        parsed = load_queries(queries_file)
+        assert isinstance(parsed[0][2], functools.partial)
 
     def test_load_fcn_name(self, queries_file):
-        parsed = load_queires(queries_file)
-        fcn = parsed[0][1]
+        parsed = load_queries(queries_file)
+        fcn = parsed[0][2]
         assert fcn.__name__ == 'TEST_SELECT'
 
     def test_load_fcn_doc(self, queries_file):
-        parsed = load_queires(queries_file)
-        fcn = parsed[0][1]
+        parsed = load_queries(queries_file)
+        fcn = parsed[0][2]
         assert fcn.__doc__ == 'testing the sqlpi module pls work\nsecond line comment'
 
     def test_load_fcn_querystring_fmt(self, queries_file):
-        parsed = load_queires(queries_file)
-        fcn = parsed[0][1]
+        parsed = load_queries(queries_file)
+        fcn = parsed[0][2]
         assert fcn.__query__ == """select *
 -- comment in middle
 from public.actor
@@ -171,11 +185,13 @@ class TestQuery:
 
     def test_query_fcn_args(self, queries_file):
         sql = Queries(queries_file)
-        assert len(sql.TEST_SELECT.args) == 4
+        assert len(sql.TEST_SELECT.args) == 1
 
 
+@pytest.mark.usefixtures("enable_logging")
 class TestInitLogging:
     def test_logging(self, queries_file, caplog):
+        caplog.set_level(logging.DEBUG)
         Queries(queries_file)
         for record in caplog.records:
             assert record.levelname == 'INFO'
@@ -187,7 +203,7 @@ class TestExceptions:
         exc_msg = "[Errno No such file or directory] Could not find file: '{}'"\
                   .format(invalid_file_path)
         with pytest.raises(SQLLoadException, message=exc_msg):
-            load_queires(invalid_file_path)
+            load_queries(invalid_file_path)
 
     def test_parse_exception(self, invalid_sql_name_start):
         exc_msg = r'^Query does not start with "-- name:": .*'
@@ -212,79 +228,124 @@ class TestExceptions:
 
 class TestQueryTypes:
     def test_type_bang(self, sql_bang):
-        name, fcn = parse_sql_entry(sql_bang)
-        assert fcn.args[3] == QueryType.INSERT_UPDATE_DELETE
+        name, sql_type, fcn = parse_sql_entry(sql_bang)
+        assert sql_type == QueryType.INSERT_UPDATE_DELETE
 
     def test_type_bang_return(self, sql_bang_return):
-        name, fcn = parse_sql_entry(sql_bang_return)
-        assert fcn.args[3] == QueryType.RETURN_ID
+        name, sql_type, fcn = parse_sql_entry(sql_bang_return)
+        assert sql_type == QueryType.RETURN_ID
 
     def test_type_built(self, sql_built):
-        name, fcn = parse_sql_entry(sql_built)
-        assert fcn.args[3] == QueryType.SELECT_BUILT
+        name, sql_type, fcn = parse_sql_entry(sql_built)
+        assert sql_type == QueryType.SELECT_BUILT
+
+    def test_type_proc(self, sql_proc):
+        name, sql_type, fcn = parse_sql_entry(sql_proc)
+        assert sql_type == QueryType.CALL_PROC
 
 
 @pytest.mark.skipif('TRAVIS' not in os.environ, reason="test data only in Travis")
 @pytest.mark.usefixtures("enable_logging")
 class TestExec:
     def test_select_1(self, db_cur, sql_select_1):
-        name, fcn = parse_sql_entry(sql_select_1)
-        output = fcn(db_cur, 1)
+        name, sql_type, fcn = parse_sql_entry(sql_select_1)
+        output = fcn(db_cur, n=1)
         assert output[0][0] == 1
+
+    def test_select_2(self, db_cur, queries_file):
+        sql = Queries(queries_file)
+        output, _ = sql.TEST_SELECT(db_cur, n=1)
+        assert output[0] == 1
+
+    def test_select_3(self, db_cur, queries_file_glob):
+        sql = Queries(queries_file_glob)
+        output, _ = sql.TEST_SELECT_B(db_cur, n=1)
+        assert output[0] == 1
+
+    def test_select_4(self, db_cur, queries_file_glob):
+        sql = Queries(queries_file_glob, uppercase_name=False)
+        output, _ = sql.test_select_b(db_cur, n=1)
+        assert output[0] == 1
 
     def test_data1(self, db_cur, queries_file):
         sql = Queries(queries_file)
         data = ('BEN',)
-        output = sql.GET_ACTORS_BY_FIRST_NAME(db_cur, 1, data)
-        assert output[0][0] == 83
+        output, _ = sql.GET_ACTORS_BY_FIRST_NAME(db_cur, data, n=1)
+        assert output[0] == 83
 
     def test_data1_1(self, db_cur, queries_file):
         sql = Queries(queries_file)
         data = ('BEN',)
-        output = sql.GET_ACTORS_BY_FIRST_NAME(db_cur, 0, data)
+        output, _ = sql.GET_ACTORS_BY_FIRST_NAME(db_cur, data)
         assert len(output) == 2
 
     def test_data1_2(self, db_cur, queries_file, caplog):
+        caplog.set_level(logging.DEBUG)
         sql = Queries(queries_file)
         data = ('BEN',)
-        sql.GET_ACTORS_BY_FIRST_NAME(db_cur, 1, data, log_query_params=False)
+        sql.GET_ACTORS_BY_FIRST_NAME(db_cur, data, n=1, log_query_params=False)
         assert "INFO Arguments: ('BEN',)" not in caplog.text
 
     def test_data1_3(self, db_cur, queries_file, caplog):
+        caplog.set_level(logging.DEBUG)
         sql = Queries(queries_file)
         data = ('BEN',)
-        sql.GET_ACTORS_BY_FIRST_NAME(db_cur, 1, data)
+        sql.GET_ACTORS_BY_FIRST_NAME(db_cur, data, n=1)
         assert "INFO Arguments: ('BEN',)" in caplog.text
 
     def test_data2(self, db_cur, queries_file, caplog):
+        caplog.set_level(logging.DEBUG)
         sql = Queries(queries_file)
-        data = ('Jeff', 'Goldblum', 'Jeff', 'Goldblum')
-        output = sql.INSERT_ACTOR(db_cur, 1, data)
-        assert output[0] == ('Jeff', 'Goldblum')
-        assert "('Jeff', 'Goldblum', 'Jeff', 'Goldblum')" in caplog.text
+        data = ('Jeff', 'Goldblum')
+        sql.PRE_CLEAR_ACTOR(db_cur, data)
+        output, _ = sql.INSERT_ACTOR(db_cur, data, n=1)
+        assert output == ('Jeff', 'Goldblum')
+        assert "('Jeff', 'Goldblum')" in caplog.text
 
     def test_data2_1(self, db_cur, queries_file):
         sql = Queries(queries_file)
-        data = ('Jeff', 'Goldblum', 'Jeff', 'Goldblum')
-        output = sql.INSERT_ACTOR(db_cur, 0, data)
+        data = ('Jeff', 'Goldblum')
+        output, _ = sql.INSERT_ACTOR(db_cur, data)
         assert output == [('Jeff', 'Goldblum')]
+
+    def test_data2_2(self, db_cur, queries_file):
+        sql = Queries(queries_file)
+        data = (('Jeff', 'Goldblum'), ('Jeff', 'Goldblum'))
+        sql.DELETE_ACTORS(db_cur, data[0])
+        output, _ = sql.INSERT_ACTORS(db_cur, data, many=True)
+        assert output == [('Jeff', 'Goldblum'), ('Jeff', 'Goldblum')]
+
+    def test_data2_3(self, db_cur, queries_file):
+        sql = Queries(queries_file)
+        data = (('Jeff', 'Goldblum'), ('Jeff', 'Goldblum'))
+        sql.DELETE_ACTORS(db_cur, data[0])
+        output, _ = sql.INSERT_ACTORS(db_cur, data, many=True, n=1)
+        assert output == ('Jeff', 'Goldblum')
+
+    def test_data2_4(self, db_cur, queries_file):
+        sql = Queries(queries_file)
+        data = (('Jeff', 'Goldblum'), ('Jeff', 'Goldblum'))
+        sql.DELETE_ACTORS(db_cur, data[0])
+        output, _ = sql.INSERT_ACTORS(db_cur, data, many=True, n=2)
+        assert output == [('Jeff', 'Goldblum'), ('Jeff', 'Goldblum')]
 
     def test_data3(self, db_cur, queries_file):
         sql = Queries(queries_file)
         kwdata = {
             'country': 'MARS'
         }
-        output1 = sql.INSERT_COUNTRY(db_cur, 0, **kwdata)
-        output2 = sql.DELETE_COUNTRY(db_cur, 0, **kwdata)
+        output1 = sql.INSERT_COUNTRY(db_cur, kwdata)
+        output2 = sql.DELETE_COUNTRY(db_cur, kwdata)
         assert output1 and output2
 
     def test_data4(self, db_cur, queries_file, caplog):
+        caplog.set_level(logging.DEBUG)
         sql = Queries(queries_file)
         kwdata = {
             'countires': ['United States'],
             'extra_name': 'BEN'
         }
-        output = sql.CUSTOMERS_OR_STAFF_IN_COUNTRY(db_cur, 0, **kwdata)
+        output, _ = sql.CUSTOMERS_OR_STAFF_IN_COUNTRY(db_cur, kwdata)
         assert len(output) == 37
         assert "'countires': ['United States']" in caplog.text
 
@@ -295,7 +356,7 @@ class TestExec:
             'extra_name': 'BEN',
             'unmatched_arg_trigger': True
         }
-        output = sql.CUSTOMERS_OR_STAFF_IN_COUNTRY(db_cur, 0, **kwdata)
+        output, _ = sql.CUSTOMERS_OR_STAFF_IN_COUNTRY(db_cur, kwdata)
         assert len(output) == 37
 
     def test_data5(self, db_cur, queries_file):
@@ -304,8 +365,8 @@ class TestExec:
             'countires': ['United States'],
             'extra_name': 'BEN'
         }
-        output = sql.CUSTOMERS_OR_STAFF_IN_COUNTRY(db_cur, 1, **kwdata)
-        assert output
+        output, _ = sql.CUSTOMERS_OR_STAFF_IN_COUNTRY(db_cur, kwdata, n=1)
+        assert len(output) == 3
 
     def test_data5_1(self, db_cur, queries_file):
         exc_msg = r'^Named argument supplied which does not match a SQL clause: .*'
@@ -316,7 +377,16 @@ class TestExec:
                 'extra_name': 'BEN',
                 'extra_param': 'I should not be here'
             }
-            sql.CUSTOMERS_OR_STAFF_IN_COUNTRY(db_cur, 1, **kwdata)
+            sql.CUSTOMERS_OR_STAFF_IN_COUNTRY(db_cur, kwdata, n=1)
+
+    def test_data5_2(self, db_cur, queries_file):
+        sql = Queries(queries_file)
+        kwdata = {
+            'countires': ['United States'],
+            'extra_name': 'BEN'
+        }
+        output, _ = sql.CUSTOMERS_OR_STAFF_IN_COUNTRY(db_cur, kwdata, n=3)
+        assert len(output) == 3
 
     def test_data6(self, db_cur, queries_file):
         sql = Queries(queries_file)
@@ -325,8 +395,23 @@ class TestExec:
             'extra_name': 'BEN'
         }
         identifiers = ('country',)
-        output = sql.CUSTOMERS_OR_STAFF_IN_COUNTRY_SORT(db_cur, 1, identifiers=identifiers, **kwdata)
-        assert output[0] == ('BEN', 'EASTER', 'Russian Federation')
+        output, _ = sql.CUSTOMERS_OR_STAFF_IN_COUNTRY_SORT(db_cur, kwdata, n=1, identifiers=identifiers)
+        assert output == ('BEN', 'EASTER', 'Russian Federation')
+
+    def test_proc1(self, db_cur, queries_file):
+        sql = Queries(queries_file)
+        output, _ = sql.INVENTORY_CHECK(db_cur, (1, 1))
+        assert output == [(1,), (2,), (3,), (4,)] or [(4,), (3,), (2,), (1,)]
+
+    def test_proc1_1(self, db_cur, queries_file):
+        sql = Queries(queries_file)
+        output, _ = sql.INVENTORY_CHECK(db_cur, (1, 1), n=1)
+        assert output == (1,) or (4,)
+
+    def test_proc1_2(self, db_cur, queries_file):
+        sql = Queries(queries_file)
+        output, _ = sql.INVENTORY_CHECK(db_cur, (1, 1), n=4)
+        assert output == [(1,), (2,), (3,), (4,)] or [(4,), (3,), (2,), (1,)]
 
 
 @pytest.mark.skipif('TRAVIS' not in os.environ, reason="test data only in Travis")
@@ -336,19 +421,19 @@ class TestExecExcept:
         with pytest.raises(psycopg2.Error):
             sql = Queries(queries_file)
             data = ('BEN',)
-            sql.GET_ACTORS_BY_FIRST_NAME_EXP(db_cur, 1, data)
+            sql.GET_ACTORS_BY_FIRST_NAME_EXP(db_cur, data, n=1)
 
     def test_data1_1(self, db_cur, queries_file):
         with pytest.raises(psycopg2.Error):
             sql = Queries(queries_file)
             data = ('BEN',)
-            sql.GET_ACTORS_BY_FIRST_NAME_EXP(db_cur, 0, data)
+            sql.GET_ACTORS_BY_FIRST_NAME_EXP(db_cur, data)
 
     def test_data2(self, db_cur, queries_file):
         with pytest.raises(psycopg2.Error):
             sql = Queries(queries_file)
             data = ('Jeff', 'Goldblum', 'Jeff', 'Goldblum')
-            sql.INSERT_ACTOR_EXP(db_cur, 0, data)
+            sql.INSERT_ACTOR_EXP(db_cur, data)
 
     def test_data3(self, db_cur, queries_file):
         with pytest.raises(psycopg2.Error):
@@ -356,8 +441,8 @@ class TestExecExcept:
             kwdata = {
                 'country': 'MARS'
             }
-            sql.INSERT_COUNTRY_EXP(db_cur, 0, **kwdata)
-            sql.DELETE_COUNTRY_EXP(db_cur, 0, **kwdata)
+            sql.INSERT_COUNTRY_EXP(db_cur, kwdata)
+            sql.DELETE_COUNTRY_EXP(db_cur, kwdata)
 
     def test_data4(self, db_cur, queries_file):
         with pytest.raises(psycopg2.Error):
@@ -366,7 +451,7 @@ class TestExecExcept:
                 'countires': ['United States'],
                 'extra_name': 'BEN'
             }
-            sql.CUSTOMERS_OR_STAFF_IN_COUNTRY_EXP(db_cur, 0, **kwdata)
+            sql.CUSTOMERS_OR_STAFF_IN_COUNTRY_EXP(db_cur, kwdata)
 
     def test_data5(self, db_cur, queries_file):
         with pytest.raises(psycopg2.Error):
@@ -375,7 +460,7 @@ class TestExecExcept:
                 'countires': ['United States'],
                 'extra_name': 'BEN'
             }
-            sql.CUSTOMERS_OR_STAFF_IN_COUNTRY_EXP(db_cur, 1, **kwdata)
+            sql.CUSTOMERS_OR_STAFF_IN_COUNTRY_EXP(db_cur, kwdata, n=1)
 
     def test_data6(self, db_cur, queries_file):
         with pytest.raises(psycopg2.Error):
@@ -385,22 +470,42 @@ class TestExecExcept:
                 'extra_name': 'BEN'
             }
             identifiers = ('country',)
-            sql.CUSTOMERS_OR_STAFF_IN_COUNTRY_SORT_EXP(db_cur, 1, identifiers=identifiers, **kwdata)
+            sql.CUSTOMERS_OR_STAFF_IN_COUNTRY_SORT_EXP(db_cur, kwdata, n=1, identifiers=identifiers)
 
     def test_data7(self, db_cur, queries_file):
         with pytest.raises(SQLpyException):
             sql = Queries(queries_file)
             data = ('BEN',)
-            sql.GET_ACTORS_BY_FIRST_NAME(db_cur, '1', data)
+            sql.GET_ACTORS_BY_FIRST_NAME(db_cur, data, n='1')
 
     def test_data7_1(self, db_cur, queries_file):
         with pytest.raises(SQLpyException):
             sql = Queries(queries_file)
             data = ('BEN',)
-            sql.GET_ACTORS_BY_FIRST_NAME(db_cur, '0', data)
+            sql.GET_ACTORS_BY_FIRST_NAME(db_cur, data, n='0')
 
     def test_data7_2(self, db_cur, queries_file):
         with pytest.raises(SQLpyException):
             sql = Queries(queries_file)
             data = ('BEN',)
-            sql.GET_ACTORS_BY_FIRST_NAME(db_cur, -1, data)
+            sql.GET_ACTORS_BY_FIRST_NAME(db_cur, data, n=-1)
+
+    def test_data8(self, db_cur, queries_file):
+        with pytest.raises(psycopg2.Error):
+            sql = Queries(queries_file)
+            data = (1, 1)
+            sql.INVENTORY_CHECK_EXP(db_cur, data)
+
+    def test_data9(self, db_cur, queries_file):
+        with pytest.raises(SQLpyException):
+            sql = Queries(queries_file)
+            data = (('Jeff', 'Goldblum'), ('Jeff', 'Goldblum'))
+            output, _ = sql.INSERT_ACTORS(db_cur, data, many=True, n='2')
+            assert output == [('Jeff', 'Goldblum'), ('Jeff', 'Goldblum')]
+
+    def test_data10(self, db_cur, queries_file):
+        with pytest.raises(SQLpyException):
+            sql = Queries(queries_file)
+            kwdata = (['United States'], 'BEN')
+            output, _ = sql.CUSTOMERS_OR_STAFF_IN_COUNTRY(db_cur, kwdata)
+            assert len(output) == 37

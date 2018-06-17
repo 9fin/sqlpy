@@ -10,7 +10,7 @@ Python `PEP249`_ is the current standard for implementing APIs between Python an
 
 The standard defines a number of common objects, methods and operations that any library must implement to be compliant. A slew of Python libraries exist for most if not all relational database systems, all adhering to the same specification. All of them boiling down to sending SQL commands to and returning their results from the database server to the Python runtime. 
 
-SQLpy was written as a lightweight helper around your already existing Python DB API 2.0 library, with no assumptions made about the underlying library of choice. Essentially only wrapping the ``cur.execute()`` and ``cur.executemany()`` methods. Connection and Cursor object creation preferences are left up to you.
+SQLpy was written as a lightweight helper around your already existing Python DB API 2.0 library, with no assumptions made about the underlying library of choice. Essentially only wrapping the ``cur.execute()``, ``cur.executemany()``, ``cur.fetchone()``, ``cur.fetchmany()`` and ``cur.fetchall()`` methods. Connection and Cursor object creation preferences are left up to you.
 
 SQLpy leverages the powerful ``functools`` module within Python and creates prepared functions reading SQL statements by reading from a queries file(s) within your project. The SQL statements have a special form that SQLpy recognises and this determines how the statement is prepared and eventually executed. Depending on if it is a simple select, a delete or a different type of statement.
 
@@ -26,6 +26,20 @@ For the following sections, let's assume we have a database table ``hello`` with
 
 .. _PEP249: https://www.python.org/dev/peps/pep-0249/
 
+
+Initialising the Queries object
+-------------------------------
+The first thing to do is to intialise the :class:`sqlpy.Queries` object with your SQL queries.
+
+.. code-block:: python
+    
+    sql = sqlpy.Queries(filepath, strict_parse=False, uppercase_name=True))
+
+Parameters
+    - filepath (:obj:`list` of :obj:`str` or :obj:`str`): List of file locations containing the SQL statements or a single filepath to the queries file.
+    - strict_parse (:obj:`bool`, optional): Weather to strictly enforce matching the expected and supplied parameters to a SQL statement function.
+    - uppercase_name (:obj:`bool`, optional): Weather to cast the names of the SQL statement functions to uppercase.
+
 Executing the functions
 -----------------------
 To execute a SQL statement and get results, just call the method by name on the :class:`sqlpy.Queries` object. Note: The name is cast to uppercase (if this causes an uproar it can be made optional in a patch release).
@@ -34,20 +48,19 @@ To execute a SQL statement and get results, just call the method by name on the 
     
     sql = sqlpy.Queries('queries.sql')
     ....
-    results = sql.SQL_STATEMENT(cur, fetch_n, args=None, identifiers=None, log_query_params=LOG_QUERY_PARAMS, **kwargs)
+    results, cur = sql.SQL_STATEMENT(cur, args=dict()|tuple(), n=None, identifiers=None, log_query_params=LOG_QUERY_PARAMS)
 
 Parameters
     - :obj:`cur`: A Cursor object. Can be any cursor type you want.
-    - fetch_n (:obj:`int`): How many results to fetch back. When set to ``0`` the underlying cursor performs a ``fetchall()`` and all the results are returned.
-    - args (:obj:`tuple`): A sequence of positional parameters in the query.
+    - args (:obj:`tuple`) or (:obj:`dict`): A sequence of positional parameters in the query. Or a dictonary with named parameters in the query.
+    - n (:obj:`int`): How many results to fetch back. By default it is set to ``None`` which and the underlying cursor performs a ``fetchall()`` and all the results are returned. For ``n=1`` a ``fetchone()`` is performed and for ``n>1`` a ``fetchmany(n)`` is perfromed.
     - identifiers (:obj:`tuple`): A sequence of positional strings to use to format the query before execution. Used with `identity strings`_. Default is ``None``.
     - log_query_params (:obj:`boolean`): A flag to enable or disable logging out of the parameters sent to the query. Some data is sensitive and should not be visible in log entries. Default is :class:`sqlpy.config.LOG_QUERY_PARAMS` which is ``True``.
-    - \**kwargs (:obj:`dict`): A dictionary of named parameters to send to the query. If specified the values in ``args`` will be ignored.
 
 
 Query types
 -----------
-The type of query executed is determined by a token SQLpy searches for at the end of the ``-- name:`` special comment string in the SQL file. This can be ``!``, ``<!>``, ``$`` or not present.
+The type of query executed is determined by a token SQLpy searches for at the end of the ``-- name:`` special comment string in the SQL file. This can be ``!``, ``<!>``, ``$``, ``@`` or not present.
 
 Comments are detected and added to the ``__doc__`` attribute of the returned function.
 
@@ -75,6 +88,10 @@ Comments are detected and added to the ``__doc__`` attribute of the returned fun
     WHERE id = %(id_low)s
     OR id = %(id_high)s;
 
+    -- name: function_name@
+    -- a procedure/function being called
+    function_name
+
 SELECT
     There is no token at the end of the name string
 
@@ -88,6 +105,8 @@ Built SQL
     There is a ``$`` token at the end of the name string
     Can only use ``pyformat`` named parameters
 
+Function Call
+    There is a ``@`` token at the end of the name string
 
 Built SQL
 `````````
@@ -99,7 +118,7 @@ SQLpy offers the functionality to dynamically build SQL queries based on the que
     - The key for each entry is the parameter contained within that line.
     - Any lines with no parameter (most of the stuff before there ``WHERE`` clause), are collected under the same key.
 
-When executed the query is reassembled in the correct line order, and lines containing parameters that have also been passed to the function as ``**kwargs`` are included. Then the final SQL is sent to the database driver as normal.
+When executed the query is reassembled in the correct line order, and lines containing parameters that have also been passed to the function as ``kwargs`` are included. (Note, not to be confused with the ``**kwargs`` convention in Python. Here we mean key-word arguments that are for the query.) Then the final SQL is sent to the database driver as normal.
 
 Example.
 
@@ -108,7 +127,7 @@ Example.
     sql = sqlpy.Queries('queries.sql')
     ....
     kwargs = {'id_low': 1}
-    results = sql.BUILT_SQL_STATEMENT(cur, 0, **kwargs)
+    results, cur = sql.BUILT_SQL_STATEMENT(cur, kwargs)
 
 Would execute the SQL.
 
@@ -161,7 +180,7 @@ Multiple parameters per line
         sql = sqlpy.Queries('queries.sql')
         ....
         kwargs = {'id_low': 1, 'id_high': 3}
-        results = sql.BUILT_SQL_STATEMENT(cur, 0, **kwargs)
+        results, cur = sql.BUILT_SQL_STATEMENT(cur, kwargs)
     
     executes...
     
@@ -191,7 +210,7 @@ Missing parameters
         sql = sqlpy.Queries('queries.sql')
         ....
         kwargs = {'id_low': [1]}
-        results = sql.BUILT_SQL_STATEMENT(cur, 0, **kwargs)
+        results, cur = sql.BUILT_SQL_STATEMENT(cur, kwargs)
     
     executes...
     
@@ -230,7 +249,7 @@ Switching off parameters
         sql = sqlpy.Queries('queries.sql')
         ....
         kwargs = {'message': ['hello']}
-        results = sql.BUILT_SQL_STATEMENT(cur, 0, **kwargs)
+        results, cur = sql.BUILT_SQL_STATEMENT(cur, kwargs)
     
     executes...
     
@@ -311,7 +330,7 @@ Due to SQL parameter escaping (see `Bobby Tables`_), many DB API libraries won't
 
 .. code-block:: python
 
-    >> sql.SELECT_BY_ID(cur, 0, identifiers=('id',), (1,))
+    >> sql.SELECT_BY_ID(cur, identifiers=('id',), (1,))
 
     [(1, u'hello')]
 
