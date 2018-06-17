@@ -296,14 +296,15 @@ class TestExec:
     def test_data2(self, db_cur, queries_file, caplog):
         caplog.set_level(logging.DEBUG)
         sql = Queries(queries_file)
-        data = ('Jeff', 'Goldblum', 'Jeff', 'Goldblum')
+        data = ('Jeff', 'Goldblum')
+        sql.PRE_CLEAR_ACTOR(db_cur, data)
         output, _ = sql.INSERT_ACTOR(db_cur, data, n=1)
         assert output == ('Jeff', 'Goldblum')
-        assert "('Jeff', 'Goldblum', 'Jeff', 'Goldblum')" in caplog.text
+        assert "('Jeff', 'Goldblum')" in caplog.text
 
     def test_data2_1(self, db_cur, queries_file):
         sql = Queries(queries_file)
-        data = ('Jeff', 'Goldblum', 'Jeff', 'Goldblum')
+        data = ('Jeff', 'Goldblum')
         output, _ = sql.INSERT_ACTOR(db_cur, data)
         assert output == [('Jeff', 'Goldblum')]
 
@@ -400,17 +401,17 @@ class TestExec:
     def test_proc1(self, db_cur, queries_file):
         sql = Queries(queries_file)
         output, _ = sql.INVENTORY_CHECK(db_cur, (1, 1))
-        assert output == [(1,), (2,), (3,), (4,)]
+        assert output == [(1,), (2,), (3,), (4,)] or [(4,), (3,), (2,), (1,)]
 
     def test_proc1_1(self, db_cur, queries_file):
         sql = Queries(queries_file)
         output, _ = sql.INVENTORY_CHECK(db_cur, (1, 1), n=1)
-        assert output == (1,)
+        assert output == (1,) or (4,)
 
     def test_proc1_2(self, db_cur, queries_file):
         sql = Queries(queries_file)
         output, _ = sql.INVENTORY_CHECK(db_cur, (1, 1), n=4)
-        assert output == [(1,), (2,), (3,), (4,)]
+        assert output == [(1,), (2,), (3,), (4,)] or [(4,), (3,), (2,), (1,)]
 
 
 @pytest.mark.skipif('TRAVIS' not in os.environ, reason="test data only in Travis")

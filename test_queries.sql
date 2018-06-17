@@ -21,8 +21,10 @@ from public.actor
 where first_name = %s
 order by actor_id;
 
--- name: insert_actor<!>
+-- name: pre_clear_actor!
 delete from public.actor where first_name = %s and last_name = %s;
+
+-- name: insert_actor<!>
 insert into public.actor (first_name, last_name)
 values (%s, %s)
 RETURNING first_name, last_name;
