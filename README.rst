@@ -91,7 +91,7 @@ Set up the application and run
 
     with db:
         with db.cursor() as cur:
-            output = sql.TEST_SELECT(cur)
+            output, cur = sql.TEST_SELECT(cur)
 
     print(output)
 

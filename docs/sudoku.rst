@@ -51,7 +51,7 @@ Imagine trying to program this to be done in SQL in a similar way but via an ORM
 .. code-block:: python
     
     board = '__g_cd__bf_____j____c__e___c__i___jd__b__h___id____e__g__b__f_e_f____g____j_h__c_'
-    results = sql.SUDOKU_SOLVER(cur, (board,), n=1)
+    results, _ = sql.SUDOKU_SOLVER(cur, (board,), n=1)
 
     print(results[0])
 
