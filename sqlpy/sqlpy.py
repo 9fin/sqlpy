@@ -259,7 +259,7 @@ class QueryFnFactory:
                                  .format(type(e), name, query), exc_info=True)
                     raise
                 else:
-                    return True, cur
+                    return True
 
             fn_partial = partial(fn, query)
 
@@ -287,11 +287,11 @@ class QueryFnFactory:
                     raise
                 else:
                     if not n:
-                        return cur.fetchall(), cur
+                        return cur.fetchall()
                     if n == 1:
-                        return cur.fetchone(), cur
+                        return cur.fetchone()
                     else:
-                        return cur.fetchmany(n), cur
+                        return cur.fetchmany(n)
 
             fn_partial = partial(fn, query)
 
@@ -314,11 +314,11 @@ class QueryFnFactory:
                     raise
                 else:
                     if not n:
-                        return cur.fetchall(), cur
+                        return cur.fetchall()
                     if n == 1:
-                        return cur.fetchone(), cur
+                        return cur.fetchone()
                     else:
-                        return cur.fetchmany(n), cur
+                        return cur.fetchmany(n)
 
             fn_partial = partial(fn, query)
 
@@ -341,11 +341,11 @@ class QueryFnFactory:
                     raise
                 else:
                     if not n:
-                        return cur.fetchall(), cur
+                        return cur.fetchall()
                     if n == 1:
-                        return cur.fetchone(), cur
+                        return cur.fetchone()
                     else:
-                        return cur.fetchmany(n), cur
+                        return cur.fetchmany(n)
 
             fn_partial = partial(fn, query)
 
@@ -399,11 +399,11 @@ class QueryFnFactory:
                     raise
                 else:
                     if not n:
-                        return cur.fetchall(), cur
+                        return cur.fetchall()
                     if n == 1:
-                        return cur.fetchone(), cur
+                        return cur.fetchone()
                     else:
-                        return cur.fetchmany(n), cur
+                        return cur.fetchmany(n)
 
             fn_partial = partial(fn, query, query_dict, query_arr)
 

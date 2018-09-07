@@ -48,7 +48,7 @@ To execute a SQL statement and get results, just call the method by name on the 
     
     sql = sqlpy.Queries('queries.sql')
     ....
-    results, cur = sql.SQL_STATEMENT(cur, args=dict()|tuple(), n=None, identifiers=None, log_query_params=LOG_QUERY_PARAMS)
+    results = sql.SQL_STATEMENT(cur, args=dict()|tuple(), n=None, identifiers=None, log_query_params=LOG_QUERY_PARAMS)
 
 Parameters
     - :obj:`cur`: A Cursor object. Can be any cursor type you want.
@@ -127,7 +127,7 @@ Example.
     sql = sqlpy.Queries('queries.sql')
     ....
     kwargs = {'id_low': 1}
-    results, cur = sql.BUILT_SQL_STATEMENT(cur, kwargs)
+    results = sql.BUILT_SQL_STATEMENT(cur, kwargs)
 
 Would execute the SQL.
 
@@ -180,7 +180,7 @@ Multiple parameters per line
         sql = sqlpy.Queries('queries.sql')
         ....
         kwargs = {'id_low': 1, 'id_high': 3}
-        results, cur = sql.BUILT_SQL_STATEMENT(cur, kwargs)
+        results = sql.BUILT_SQL_STATEMENT(cur, kwargs)
     
     executes...
     
@@ -210,7 +210,7 @@ Missing parameters
         sql = sqlpy.Queries('queries.sql')
         ....
         kwargs = {'id_low': [1]}
-        results, cur = sql.BUILT_SQL_STATEMENT(cur, kwargs)
+        results = sql.BUILT_SQL_STATEMENT(cur, kwargs)
     
     executes...
     
@@ -249,7 +249,7 @@ Switching off parameters
         sql = sqlpy.Queries('queries.sql')
         ....
         kwargs = {'message': ['hello']}
-        results, cur = sql.BUILT_SQL_STATEMENT(cur, kwargs)
+        results = sql.BUILT_SQL_STATEMENT(cur, kwargs)
     
     executes...
     
