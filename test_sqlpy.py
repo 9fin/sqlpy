@@ -281,9 +281,9 @@ class TestExec:
 
     def test_data1_2(self, db_cur, queries_file, caplog):
         caplog.set_level(logging.DEBUG)
-        sql = Queries(queries_file)
+        sql = Queries(queries_file, log_query_params=False)
         data = ('BEN',)
-        sql.GET_ACTORS_BY_FIRST_NAME(db_cur, data, n=1, log_query_params=False)
+        sql.GET_ACTORS_BY_FIRST_NAME(db_cur, data, n=1)
         assert "INFO Arguments: ('BEN',)" not in caplog.text
 
     def test_data1_3(self, db_cur, queries_file, caplog):
