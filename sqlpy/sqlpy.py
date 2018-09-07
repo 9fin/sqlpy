@@ -37,12 +37,14 @@ class Queries(object):
         uppercase_name (:obj:`bool`, optional): Weather to cast the names of the SQL
             statement functions to uppercase.
     """
-    def __init__(self, filepath, strict_parse=False, uppercase_name=True):
+    def __init__(self, filepath, strict_parse=False, uppercase_name=True, log_query_params=True):
         self.available_queries = []
         global STRICT_BUILT_PARSE
         STRICT_BUILT_PARSE = strict_parse
         global UPPERCASE_QUERY_NAME
         UPPERCASE_QUERY_NAME = uppercase_name
+        global LOG_QUERY_PARAMS
+        LOG_QUERY_PARAMS = log_query_params
         for name, sql_type, fn in load_queries(filepath):
             self.add_query(name, fn)
         logger.info('Found and loaded {} sql queires'.format(len(self.available_queries)))
@@ -259,7 +261,7 @@ class QueryFnFactory:
                                  .format(type(e), name, query), exc_info=True)
                     raise
                 else:
-                    return True, cur
+                    return True
 
             fn_partial = partial(fn, query)
 
@@ -287,11 +289,11 @@ class QueryFnFactory:
                     raise
                 else:
                     if not n:
-                        return cur.fetchall(), cur
+                        return cur.fetchall()
                     if n == 1:
-                        return cur.fetchone(), cur
+                        return cur.fetchone()
                     else:
-                        return cur.fetchmany(n), cur
+                        return cur.fetchmany(n)
 
             fn_partial = partial(fn, query)
 
@@ -314,11 +316,11 @@ class QueryFnFactory:
                     raise
                 else:
                     if not n:
-                        return cur.fetchall(), cur
+                        return cur.fetchall()
                     if n == 1:
-                        return cur.fetchone(), cur
+                        return cur.fetchone()
                     else:
-                        return cur.fetchmany(n), cur
+                        return cur.fetchmany(n)
 
             fn_partial = partial(fn, query)
 
@@ -341,11 +343,11 @@ class QueryFnFactory:
                     raise
                 else:
                     if not n:
-                        return cur.fetchall(), cur
+                        return cur.fetchall()
                     if n == 1:
-                        return cur.fetchone(), cur
+                        return cur.fetchone()
                     else:
-                        return cur.fetchmany(n), cur
+                        return cur.fetchmany(n)
 
             fn_partial = partial(fn, query)
 
@@ -399,11 +401,11 @@ class QueryFnFactory:
                     raise
                 else:
                     if not n:
-                        return cur.fetchall(), cur
+                        return cur.fetchall()
                     if n == 1:
-                        return cur.fetchone(), cur
+                        return cur.fetchone()
                     else:
-                        return cur.fetchmany(n), cur
+                        return cur.fetchmany(n)
 
             fn_partial = partial(fn, query, query_dict, query_arr)
 

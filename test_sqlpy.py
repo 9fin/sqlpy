@@ -250,40 +250,40 @@ class TestExec:
     def test_select_1(self, db_cur, sql_select_1):
         name, sql_type, fcn = parse_sql_entry(sql_select_1)
         output = fcn(db_cur, n=1)
-        assert output[0][0] == 1
+        assert output[0] == 1
 
     def test_select_2(self, db_cur, queries_file):
         sql = Queries(queries_file)
-        output, _ = sql.TEST_SELECT(db_cur, n=1)
+        output = sql.TEST_SELECT(db_cur, n=1)
         assert output[0] == 1
 
     def test_select_3(self, db_cur, queries_file_glob):
         sql = Queries(queries_file_glob)
-        output, _ = sql.TEST_SELECT_B(db_cur, n=1)
+        output = sql.TEST_SELECT_B(db_cur, n=1)
         assert output[0] == 1
 
     def test_select_4(self, db_cur, queries_file_glob):
         sql = Queries(queries_file_glob, uppercase_name=False)
-        output, _ = sql.test_select_b(db_cur, n=1)
+        output = sql.test_select_b(db_cur, n=1)
         assert output[0] == 1
 
     def test_data1(self, db_cur, queries_file):
         sql = Queries(queries_file)
         data = ('BEN',)
-        output, _ = sql.GET_ACTORS_BY_FIRST_NAME(db_cur, data, n=1)
+        output = sql.GET_ACTORS_BY_FIRST_NAME(db_cur, data, n=1)
         assert output[0] == 83
 
     def test_data1_1(self, db_cur, queries_file):
         sql = Queries(queries_file)
         data = ('BEN',)
-        output, _ = sql.GET_ACTORS_BY_FIRST_NAME(db_cur, data)
+        output = sql.GET_ACTORS_BY_FIRST_NAME(db_cur, data)
         assert len(output) == 2
 
     def test_data1_2(self, db_cur, queries_file, caplog):
         caplog.set_level(logging.DEBUG)
-        sql = Queries(queries_file)
+        sql = Queries(queries_file, log_query_params=False)
         data = ('BEN',)
-        sql.GET_ACTORS_BY_FIRST_NAME(db_cur, data, n=1, log_query_params=False)
+        sql.GET_ACTORS_BY_FIRST_NAME(db_cur, data, n=1)
         assert "INFO Arguments: ('BEN',)" not in caplog.text
 
     def test_data1_3(self, db_cur, queries_file, caplog):
@@ -298,35 +298,35 @@ class TestExec:
         sql = Queries(queries_file)
         data = ('Jeff', 'Goldblum')
         sql.PRE_CLEAR_ACTOR(db_cur, data)
-        output, _ = sql.INSERT_ACTOR(db_cur, data, n=1)
+        output = sql.INSERT_ACTOR(db_cur, data, n=1)
         assert output == ('Jeff', 'Goldblum')
         assert "('Jeff', 'Goldblum')" in caplog.text
 
     def test_data2_1(self, db_cur, queries_file):
         sql = Queries(queries_file)
         data = ('Jeff', 'Goldblum')
-        output, _ = sql.INSERT_ACTOR(db_cur, data)
+        output = sql.INSERT_ACTOR(db_cur, data)
         assert output == [('Jeff', 'Goldblum')]
 
     def test_data2_2(self, db_cur, queries_file):
         sql = Queries(queries_file)
         data = (('Jeff', 'Goldblum'), ('Jeff', 'Goldblum'))
         sql.DELETE_ACTORS(db_cur, data[0])
-        output, _ = sql.INSERT_ACTORS(db_cur, data, many=True)
+        output = sql.INSERT_ACTORS(db_cur, data, many=True)
         assert output == [('Jeff', 'Goldblum'), ('Jeff', 'Goldblum')]
 
     def test_data2_3(self, db_cur, queries_file):
         sql = Queries(queries_file)
         data = (('Jeff', 'Goldblum'), ('Jeff', 'Goldblum'))
         sql.DELETE_ACTORS(db_cur, data[0])
-        output, _ = sql.INSERT_ACTORS(db_cur, data, many=True, n=1)
+        output = sql.INSERT_ACTORS(db_cur, data, many=True, n=1)
         assert output == ('Jeff', 'Goldblum')
 
     def test_data2_4(self, db_cur, queries_file):
         sql = Queries(queries_file)
         data = (('Jeff', 'Goldblum'), ('Jeff', 'Goldblum'))
         sql.DELETE_ACTORS(db_cur, data[0])
-        output, _ = sql.INSERT_ACTORS(db_cur, data, many=True, n=2)
+        output = sql.INSERT_ACTORS(db_cur, data, many=True, n=2)
         assert output == [('Jeff', 'Goldblum'), ('Jeff', 'Goldblum')]
 
     def test_data3(self, db_cur, queries_file):
@@ -345,7 +345,7 @@ class TestExec:
             'countires': ['United States'],
             'extra_name': 'BEN'
         }
-        output, _ = sql.CUSTOMERS_OR_STAFF_IN_COUNTRY(db_cur, kwdata)
+        output = sql.CUSTOMERS_OR_STAFF_IN_COUNTRY(db_cur, kwdata)
         assert len(output) == 37
         assert "'countires': ['United States']" in caplog.text
 
@@ -356,7 +356,7 @@ class TestExec:
             'extra_name': 'BEN',
             'unmatched_arg_trigger': True
         }
-        output, _ = sql.CUSTOMERS_OR_STAFF_IN_COUNTRY(db_cur, kwdata)
+        output = sql.CUSTOMERS_OR_STAFF_IN_COUNTRY(db_cur, kwdata)
         assert len(output) == 37
 
     def test_data5(self, db_cur, queries_file):
@@ -365,7 +365,7 @@ class TestExec:
             'countires': ['United States'],
             'extra_name': 'BEN'
         }
-        output, _ = sql.CUSTOMERS_OR_STAFF_IN_COUNTRY(db_cur, kwdata, n=1)
+        output = sql.CUSTOMERS_OR_STAFF_IN_COUNTRY(db_cur, kwdata, n=1)
         assert len(output) == 3
 
     def test_data5_1(self, db_cur, queries_file):
@@ -385,7 +385,7 @@ class TestExec:
             'countires': ['United States'],
             'extra_name': 'BEN'
         }
-        output, _ = sql.CUSTOMERS_OR_STAFF_IN_COUNTRY(db_cur, kwdata, n=3)
+        output = sql.CUSTOMERS_OR_STAFF_IN_COUNTRY(db_cur, kwdata, n=3)
         assert len(output) == 3
 
     def test_data6(self, db_cur, queries_file):
@@ -395,22 +395,22 @@ class TestExec:
             'extra_name': 'BEN'
         }
         identifiers = ('country',)
-        output, _ = sql.CUSTOMERS_OR_STAFF_IN_COUNTRY_SORT(db_cur, kwdata, n=1, identifiers=identifiers)
+        output = sql.CUSTOMERS_OR_STAFF_IN_COUNTRY_SORT(db_cur, kwdata, n=1, identifiers=identifiers)
         assert output == ('BEN', 'EASTER', 'Russian Federation')
 
     def test_proc1(self, db_cur, queries_file):
         sql = Queries(queries_file)
-        output, _ = sql.INVENTORY_CHECK(db_cur, (1, 1))
+        output = sql.INVENTORY_CHECK(db_cur, (1, 1))
         assert output == [(1,), (2,), (3,), (4,)] or [(4,), (3,), (2,), (1,)]
 
     def test_proc1_1(self, db_cur, queries_file):
         sql = Queries(queries_file)
-        output, _ = sql.INVENTORY_CHECK(db_cur, (1, 1), n=1)
+        output = sql.INVENTORY_CHECK(db_cur, (1, 1), n=1)
         assert output == (1,) or (4,)
 
     def test_proc1_2(self, db_cur, queries_file):
         sql = Queries(queries_file)
-        output, _ = sql.INVENTORY_CHECK(db_cur, (1, 1), n=4)
+        output = sql.INVENTORY_CHECK(db_cur, (1, 1), n=4)
         assert output == [(1,), (2,), (3,), (4,)] or [(4,), (3,), (2,), (1,)]
 
 
@@ -500,12 +500,12 @@ class TestExecExcept:
         with pytest.raises(SQLpyException):
             sql = Queries(queries_file)
             data = (('Jeff', 'Goldblum'), ('Jeff', 'Goldblum'))
-            output, _ = sql.INSERT_ACTORS(db_cur, data, many=True, n='2')
+            output = sql.INSERT_ACTORS(db_cur, data, many=True, n='2')
             assert output == [('Jeff', 'Goldblum'), ('Jeff', 'Goldblum')]
 
     def test_data10(self, db_cur, queries_file):
         with pytest.raises(SQLpyException):
             sql = Queries(queries_file)
             kwdata = (['United States'], 'BEN')
-            output, _ = sql.CUSTOMERS_OR_STAFF_IN_COUNTRY(db_cur, kwdata)
+            output = sql.CUSTOMERS_OR_STAFF_IN_COUNTRY(db_cur, kwdata)
             assert len(output) == 37
