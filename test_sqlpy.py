@@ -250,7 +250,7 @@ class TestExec:
     def test_select_1(self, db_cur, sql_select_1):
         name, sql_type, fcn = parse_sql_entry(sql_select_1)
         output = fcn(db_cur, n=1)
-        assert output[0][0] == 1
+        assert output[0] == 1
 
     def test_select_2(self, db_cur, queries_file):
         sql = Queries(queries_file)
