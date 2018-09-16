@@ -59,6 +59,15 @@ and ci.country_id = co.country_id
 and (co.country = ANY(%(countires)s) or first_name = %(extra_name)s)
 order by {} asc;
 
+-- name: customers_or_staff_in_country_sort_group
+select first_name, last_name, country
+from public.customer c, public.address a, public.city ci, public.country co
+where c.address_id = a.address_id
+and a.city_id = ci.city_id
+and ci.country_id = co.country_id
+and (co.country = ANY(%(countires)s) or first_name = %(extra_name)s)
+order by {order_group} asc;
+
 
 
 -- name: get_actors_by_first_name_exp

@@ -124,7 +124,7 @@ def db_cur():
     db_host = 'localhost'
     db_port = 5432
     db_user = 'postgres'
-    db_pass = ''
+    db_pass = 'postgres9fin'
     db = psycopg2.connect(dbname='postgres',
                           user=db_user,
                           password=db_pass,
@@ -398,6 +398,16 @@ class TestExec:
         output = sql.CUSTOMERS_OR_STAFF_IN_COUNTRY_SORT(db_cur, kwdata, n=1, identifiers=identifiers)
         assert output == ('BEN', 'EASTER', 'Russian Federation')
 
+    def test_data6_1(self, db_cur, queries_file):
+        sql = Queries(queries_file)
+        kwdata = {
+            'countires': ['United States'],
+            'extra_name': 'BEN'
+        }
+        identifiers = {'order_group': ('country', 'last_name')}
+        output = sql.CUSTOMERS_OR_STAFF_IN_COUNTRY_SORT_GROUP(db_cur, kwdata, n=1, identifiers=identifiers)
+        assert output == ('BEN', 'EASTER', 'Russian Federation')
+
     def test_proc1(self, db_cur, queries_file):
         sql = Queries(queries_file)
         output = sql.INVENTORY_CHECK(db_cur, (1, 1))
@@ -471,6 +481,16 @@ class TestExecExcept:
             }
             identifiers = ('country',)
             sql.CUSTOMERS_OR_STAFF_IN_COUNTRY_SORT_EXP(db_cur, kwdata, n=1, identifiers=identifiers)
+
+    def test_data6_1(self, db_cur, queries_file):
+        with pytest.raises(SQLParseException):
+            sql = Queries(queries_file)
+            kwdata = {
+                'countires': ['United States'],
+                'extra_name': 'BEN'
+            }
+            identifiers = 'country'
+            sql.CUSTOMERS_OR_STAFF_IN_COUNTRY_SORT_GROUP(db_cur, kwdata, n=1, identifiers=identifiers)
 
     def test_data7(self, db_cur, queries_file):
         with pytest.raises(SQLpyException):
