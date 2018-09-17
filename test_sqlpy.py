@@ -124,7 +124,7 @@ def db_cur():
     db_host = 'localhost'
     db_port = 5432
     db_user = 'postgres'
-    db_pass = 'postgres9fin'
+    db_pass = ''
     db = psycopg2.connect(dbname='postgres',
                           user=db_user,
                           password=db_pass,
