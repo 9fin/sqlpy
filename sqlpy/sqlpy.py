@@ -257,14 +257,17 @@ def format_query_identifiers(query, identifiers, id_quote_fcn, cur):
     Returns:
         :obj:`str`: query string
     """
+    def normalise(v):
+        return [v] if isinstance(v, str) else v
+
     if isinstance(identifiers, dict):
-        ids = {k: ','.join(list(id_quote_fcn(i, cur) for i in v)) for k, v in identifiers.items()}
+        ids = {k: ','.join(list(id_quote_fcn(i, cur) for i in normalise(v))) for k, v in identifiers.items()}
         return query.format(**ids)
     elif isinstance(identifiers, (list, tuple)):
         ids = list(id_quote_fcn(i, cur) for i in identifiers)
         return query.format(*ids)
     else:
-        raise SQLParseException("Invalid data type passed as identifiers. Must be dict, list or tuple", identifiers)
+        raise SQLParseException("Invalid data type passed as identifiers. Must be dict of iterables, dict of strings, list or tuple", identifiers)
 
 
 class QueryFnFactory:
