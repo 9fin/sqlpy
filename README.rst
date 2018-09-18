@@ -198,6 +198,18 @@ Due to SQL parameter escaping (see `Bobby Tables`_), many DB API libraries won't
 
     [(1, u'hello')]
 
+It is also possible to define identifiers in multiple parts of the query by passing a named identifier group(s) in a dictionary. This allows multiple identifiers to be contained within the same format token slot.
+
+.. code-block:: sql
+
+    -- name: select_orderd_group
+    SELECT * FROM hello
+    ORDER BY {order_group};
+
+.. code-block:: python
+
+    >> sql.SELECT_BY_ID(cur, identifiers={'order_group': ('col_1', 'col_2', 'col_3')}
+
 .. _Bobby Tables: http://bobby-tables.com/python
 
 Tests

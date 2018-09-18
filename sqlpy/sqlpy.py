@@ -236,6 +236,40 @@ def parse_sql_entry(entry):
     return name, sql_type, fn_partial
 
 
+def format_query_identifiers(query, identifiers, id_quote_fcn, cur):
+    """
+    Safely tokenizes SQL identifiers to be used in a SQL statement.
+
+    When ``identifiers`` are passed into a SQLpy query, they are substituted into
+    the SQL string at their defined locations. This is done in a safe way using a
+    parameter escaping function provided by the underlying DB API library. A SQL statement
+    with identifier tokens replaced is returned to be later bound to argument parameters.
+
+    To use multiple identifiers in different parts of the query "identifier groups", you must
+    use a dict type.
+
+    Args:
+        query (:obj:`string`): the unprepared query string
+        identifers (:obj:`list` or :obj:`dict`): iterable or dictionary of iterables
+        id_quote_fcn (:func:`id_quote_fcn`): function for safely escaping values
+        cur (:obj:`cursor`): cursor object
+
+    Returns:
+        :obj:`str`: query string
+    """
+    def normalise(v):
+        return [v] if isinstance(v, str) else v
+
+    if isinstance(identifiers, dict):
+        ids = {k: ','.join(list(id_quote_fcn(i, cur) for i in normalise(v))) for k, v in identifiers.items()}
+        return query.format(**ids)
+    elif isinstance(identifiers, (list, tuple)):
+        ids = list(id_quote_fcn(i, cur) for i in identifiers)
+        return query.format(*ids)
+    else:
+        raise SQLParseException("Invalid data type passed as identifiers. Must be dict of iterables, dict of strings, list or tuple", identifiers)
+
+
 class QueryFnFactory:
     @staticmethod
     def make_query(query, query_dict, query_arr, sql_type, name, doc):
@@ -245,8 +279,7 @@ class QueryFnFactory:
                 if identifiers:  # pragma: no cover
                     if not quote_ident:
                         raise SQLpyException('"quote_ident" is not supported')
-                    identifiers = list(quote_ident(i, cur) for i in identifiers)
-                    query = query.format(*identifiers)
+                    query = format_query_identifiers(query, identifiers, quote_ident, cur)
                 logger.info('Executing: {}'.format(name))
                 log_query(query, args, log_query_params)
                 try:
@@ -272,8 +305,7 @@ class QueryFnFactory:
                 if identifiers:  # pragma: no cover
                     if not quote_ident:
                         raise SQLpyException('"quote_ident" is not supported')
-                    identifiers = list(quote_ident(i, cur) for i in identifiers)
-                    query = query.format(*identifiers)
+                    query = format_query_identifiers(query, identifiers, quote_ident, cur)
                 logger.info('Executing: {}'.format(name))
                 log_query(query, args, log_query_params)
                 try:
@@ -304,8 +336,7 @@ class QueryFnFactory:
                 if identifiers:  # pragma: no cover
                     if not quote_ident:
                         raise SQLpyException('"quote_ident" is not supported')
-                    identifiers = list(quote_ident(i, cur) for i in identifiers)
-                    query = query.format(*identifiers)
+                    query = format_query_identifiers(query, identifiers, quote_ident, cur)
                 logger.info('Executing: {}'.format(name))
                 log_query(query, args, log_query_params)
                 try:
@@ -331,8 +362,7 @@ class QueryFnFactory:
                 if identifiers:  # pragma: no cover
                     if not quote_ident:
                         raise SQLpyException('"quote_ident" is not supported')
-                    identifiers = list(quote_ident(i, cur) for i in identifiers)
-                    query = query.format(*identifiers)
+                    query = format_query_identifiers(query, identifiers, quote_ident, cur)
                 logger.info('Executing: {}'.format(name))
                 log_query(query, args, log_query_params)
                 try:
@@ -390,8 +420,7 @@ class QueryFnFactory:
                 if identifiers:  # pragma: no cover
                     if not quote_ident:
                         raise SQLpyException('"quote_ident" is not supported')
-                    identifiers = list(quote_ident(i, cur) for i in identifiers)
-                    query_built = query_built.format(*identifiers)
+                    query = format_query_identifiers(query, identifiers, quote_ident, cur)
                 log_query(query_built, args, log_query_params)
                 try:
                     cur.execute(query_built, args)
