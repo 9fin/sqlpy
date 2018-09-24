@@ -5,13 +5,18 @@ Changelog
 Current release
 ===============
 
+0.3.3
+-----
+Bugfix
+    - identifier formatting in built sql not happening `#21 <https://github.com/9fin/sqlpy/issues/21>`_
+
+Previous releases
+=================
+
 0.3.2
 -----
 Major Updates
     - Support sets of identifier groups and using named parameters `#20 <https://github.com/9fin/sqlpy/issues/20>`_
-
-Previous releases
-=================
 
 0.3.1
 -----

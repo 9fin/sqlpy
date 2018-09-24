@@ -420,7 +420,7 @@ class QueryFnFactory:
                 if identifiers:  # pragma: no cover
                     if not quote_ident:
                         raise SQLpyException('"quote_ident" is not supported')
-                    query = format_query_identifiers(query, identifiers, quote_ident, cur)
+                    query_built = format_query_identifiers(query_built, identifiers, quote_ident, cur)
                 log_query(query_built, args, log_query_params)
                 try:
                     cur.execute(query_built, args)
