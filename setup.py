@@ -22,7 +22,7 @@ from setuptools import setup
 import os
 import sys
 
-VERSION = '0.3.2'
+VERSION = '0.3.3'
 
 if sys.argv[-1] == 'build':
     os.system("python setup.py bdist_wheel")

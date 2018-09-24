@@ -50,7 +50,7 @@ and ci.country_id = co.country_id
 and (co.country = ANY(%(countires)s) or first_name = %(extra_name)s)
 and ((FALSE or co.country = %(unmatched_arg)s) or (FALSE or %(unmatched_arg_trigger)s))
 
--- name: customers_or_staff_in_country_sort
+-- name: customers_or_staff_in_country_sort$
 select first_name, last_name, country
 from public.customer c, public.address a, public.city ci, public.country co
 where c.address_id = a.address_id
@@ -59,7 +59,7 @@ and ci.country_id = co.country_id
 and (co.country = ANY(%(countires)s) or first_name = %(extra_name)s)
 order by {} asc;
 
--- name: customers_or_staff_in_country_sort_group
+-- name: customers_or_staff_in_country_sort_group$
 select first_name, last_name, country
 from public.customer c, public.address a, public.city ci, public.country co
 where c.address_id = a.address_id
