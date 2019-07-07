@@ -451,7 +451,7 @@ class QueryFnFactory:
                 log_query(query_built, args, log_query_params)
                 if mogrify:
                     try:
-                        bound_query = cur.mogrify(query_built, args)
+                        bound_query = query_built
                     except Exception as e:
                         logger.error('Exception Type "{}" raised, on mogrifying query "{}"\n____\n{}\n____'
                                      .format(type(e), name, query_built), exc_info=True)
