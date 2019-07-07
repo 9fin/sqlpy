@@ -275,13 +275,22 @@ class QueryFnFactory:
     def make_query(query, query_dict, query_arr, sql_type, name, doc):
 
         if sql_type == QueryType.INSERT_UPDATE_DELETE:
-            def fn(query, cur, args=tuple(), many=None, identifiers=None, log_query_params=LOG_QUERY_PARAMS, **kwargs):
+            def fn(query, cur, args=tuple(), many=None, identifiers=None, log_query_params=LOG_QUERY_PARAMS, mogrify=False, **kwargs):
                 if identifiers:  # pragma: no cover
                     if not quote_ident:
                         raise SQLpyException('"quote_ident" is not supported')
                     query = format_query_identifiers(query, identifiers, quote_ident, cur)
                 logger.info('Executing: {}'.format(name))
                 log_query(query, args, log_query_params)
+                if mogrify:
+                    try:
+                        bound_query = cur.mogrify(query, args)
+                    except Exception as e:
+                        logger.error('Exception Type "{}" raised, on mogrifying query "{}"\n____\n{}\n____'
+                                     .format(type(e), name, query), exc_info=True)
+                        raise
+                    else:
+                        return bound_query
                 try:
                     if many and execute_values:
                         execute_values(cur, query, args)
@@ -299,7 +308,7 @@ class QueryFnFactory:
             fn_partial = partial(fn, query)
 
         elif sql_type == QueryType.RETURN_ID:
-            def fn(query, cur, args=tuple(), n=None, many=None, identifiers=None, log_query_params=LOG_QUERY_PARAMS, **kwargs):
+            def fn(query, cur, args=tuple(), n=None, many=None, identifiers=None, log_query_params=LOG_QUERY_PARAMS, mogrify=False, **kwargs):
                 if n and (not isinstance(n, int) or n < 1):
                     raise SQLpyException('"n" must be an Integer >= 1')
                 if identifiers:  # pragma: no cover
@@ -308,6 +317,15 @@ class QueryFnFactory:
                     query = format_query_identifiers(query, identifiers, quote_ident, cur)
                 logger.info('Executing: {}'.format(name))
                 log_query(query, args, log_query_params)
+                if mogrify:
+                    try:
+                        bound_query = cur.mogrify(query, args)
+                    except Exception as e:
+                        logger.error('Exception Type "{}" raised, on mogrifying query "{}"\n____\n{}\n____'
+                                     .format(type(e), name, query), exc_info=True)
+                        raise
+                    else:
+                        return bound_query
                 try:
                     if many and execute_values:
                         execute_values(cur, query, args)
@@ -330,7 +348,7 @@ class QueryFnFactory:
             fn_partial = partial(fn, query)
 
         elif sql_type == QueryType.CALL_PROC:
-            def fn(query, cur, args=tuple(), n=None, identifiers=None, log_query_params=LOG_QUERY_PARAMS, **kwargs):
+            def fn(query, cur, args=tuple(), n=None, identifiers=None, log_query_params=LOG_QUERY_PARAMS, mogrify=False, **kwargs):
                 if n and (not isinstance(n, int) or n < 1):
                     raise SQLpyException('"n" must be an Integer >= 1')
                 if identifiers:  # pragma: no cover
@@ -356,7 +374,7 @@ class QueryFnFactory:
             fn_partial = partial(fn, query)
 
         elif sql_type == QueryType.SELECT:
-            def fn(query, cur, args=tuple(), n=None, identifiers=None, log_query_params=LOG_QUERY_PARAMS, **kwargs):
+            def fn(query, cur, args=tuple(), n=None, identifiers=None, log_query_params=LOG_QUERY_PARAMS, mogrify=False, **kwargs):
                 if n and (not isinstance(n, int) or n < 1):
                     raise SQLpyException('"n" must be an Integer >= 1')
                 if identifiers:  # pragma: no cover
@@ -365,6 +383,15 @@ class QueryFnFactory:
                     query = format_query_identifiers(query, identifiers, quote_ident, cur)
                 logger.info('Executing: {}'.format(name))
                 log_query(query, args, log_query_params)
+                if mogrify:
+                    try:
+                        bound_query = cur.mogrify(query, args)
+                    except Exception as e:
+                        logger.error('Exception Type "{}" raised, on mogrifying query "{}"\n____\n{}\n____'
+                                     .format(type(e), name, query), exc_info=True)
+                        raise
+                    else:
+                        return bound_query
                 try:
                     cur.execute(query, args)
                 except Exception as e:
@@ -382,7 +409,7 @@ class QueryFnFactory:
             fn_partial = partial(fn, query)
 
         elif sql_type == QueryType.SELECT_BUILT:
-            def fn(query, query_dict, query_arr, cur, args=dict(), n=None, identifiers=None, log_query_params=LOG_QUERY_PARAMS, **kwargs):
+            def fn(query, query_dict, query_arr, cur, args=dict(), n=None, identifiers=None, log_query_params=LOG_QUERY_PARAMS, mogrify=False, **kwargs):
                 if n and (not isinstance(n, int) or n < 1):
                     raise SQLpyException('"n" must be an Integer >= 1')
                 if not isinstance(args, dict):
@@ -422,6 +449,15 @@ class QueryFnFactory:
                         raise SQLpyException('"quote_ident" is not supported')
                     query_built = format_query_identifiers(query_built, identifiers, quote_ident, cur)
                 log_query(query_built, args, log_query_params)
+                if mogrify:
+                    try:
+                        bound_query = cur.mogrify(query_built, args)
+                    except Exception as e:
+                        logger.error('Exception Type "{}" raised, on mogrifying query "{}"\n____\n{}\n____'
+                                     .format(type(e), name, query_built), exc_info=True)
+                        raise
+                    else:
+                        return bound_query
                 try:
                     cur.execute(query_built, args)
                 except Exception as e:

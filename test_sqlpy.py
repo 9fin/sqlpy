@@ -293,6 +293,14 @@ class TestExec:
         sql.GET_ACTORS_BY_FIRST_NAME(db_cur, data, n=1)
         assert "INFO Arguments: ('BEN',)" in caplog.text
 
+    def test_data1_4(self, db_cur, queries_file, caplog):
+        caplog.set_level(logging.DEBUG)
+        sql = Queries(queries_file)
+        data = ('BEN',)
+        bound_query = sql.GET_ACTORS_BY_FIRST_NAME(db_cur, data, n=1, mogrify=True)
+        print(' '.join(bound_query.split('\n')).replace('  ', ' '))
+        assert (' '.join(bound_query.split('\n')).replace('  ', ' ')) == "select * from public.actor where first_name = 'BEN' order by actor_id;"
+
     def test_data2(self, db_cur, queries_file, caplog):
         caplog.set_level(logging.DEBUG)
         sql = Queries(queries_file)
@@ -328,6 +336,13 @@ class TestExec:
         sql.DELETE_ACTORS(db_cur, data[0])
         output = sql.INSERT_ACTORS(db_cur, data, many=True, n=2)
         assert output == [('Jeff', 'Goldblum'), ('Jeff', 'Goldblum')]
+
+    def test_data2_5(self, db_cur, queries_file):
+        sql = Queries(queries_file)
+        data = ('Jeff', 'Goldblum')
+        sql.DELETE_ACTORS(db_cur, data)
+        bound_query = sql.INSERT_ACTOR(db_cur, data, mogrify=True)
+        assert (' '.join(bound_query.split('\n')).replace('  ', ' ')) == "insert into public.actor (first_name, last_name) values ('Jeff', 'Goldblum') RETURNING first_name, last_name;"
 
     def test_data3(self, db_cur, queries_file):
         sql = Queries(queries_file)
@@ -417,6 +432,16 @@ class TestExec:
         identifiers = {'order_group': 'country'}
         output = sql.CUSTOMERS_OR_STAFF_IN_COUNTRY_SORT_GROUP(db_cur, kwdata, n=1, identifiers=identifiers)
         assert output == ('BEN', 'EASTER', 'Russian Federation')
+
+    def test_data6_3(self, db_cur, queries_file):
+        sql = Queries(queries_file)
+        kwdata = {
+            'countires': ['United States'],
+            'extra_name': 'BEN'
+        }
+        identifiers = {'order_group': 'country'}
+        bound_query = sql.CUSTOMERS_OR_STAFF_IN_COUNTRY_SORT_GROUP(db_cur, kwdata, n=1, identifiers=identifiers, mogrify=True)
+        assert (' '.join(bound_query.split('\n')).replace('  ', ' ')) == """ select first_name, last_name, country from public.customer c, public.address a, public.city ci, public.country co where c.address_id = a.address_id and a.city_id = ci.city_id and ci.country_id = co.country_id and (co.country = ANY(ARRAY['United States']) or first_name = 'BEN') order by "country" asc;"""
 
     def test_proc1(self, db_cur, queries_file):
         sql = Queries(queries_file)
