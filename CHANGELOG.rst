@@ -5,7 +5,7 @@ Changelog
 Current release
 ===============
 
-0.3.4
+0.3.4 0.3.5
 -----
 Bugfix
     - use a more broad import for ``quote_ident`` function, to allow instrumentation libraries to correctly use the patched version `#24 <https://github.com/9fin/sqlpy/issues/24>`_
