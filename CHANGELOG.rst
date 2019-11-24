@@ -5,13 +5,18 @@ Changelog
 Current release
 ===============
 
+0.3.4
+-----
+Bugfix
+    - use a more broad import for ``quote_ident`` function, to allow instrumentation libraries to correctly use the patched version `#24 <https://github.com/9fin/sqlpy/issues/24>`_
+
+Previous releases
+=================
+
 0.3.3
 -----
 Bugfix
     - identifier formatting in built sql not happening `#21 <https://github.com/9fin/sqlpy/issues/21>`_
-
-Previous releases
-=================
 
 0.3.2
 -----
