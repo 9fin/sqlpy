@@ -1,6 +1,6 @@
 from __future__ import print_function, absolute_import
 import os
-from .config import (quote_ident, STRICT_BUILT_PARSE, UPPERCASE_QUERY_NAME,
+from .config import (extensions, quote_ident, STRICT_BUILT_PARSE, UPPERCASE_QUERY_NAME,
                      LOG_QUERY_PARAMS, QueryType, execute_values)
 from functools import partial
 from itertools import takewhile
@@ -279,7 +279,7 @@ class QueryFnFactory:
                 if identifiers:  # pragma: no cover
                     if not quote_ident:
                         raise SQLpyException('"quote_ident" is not supported')
-                    query = format_query_identifiers(query, identifiers, quote_ident, cur)
+                    query = format_query_identifiers(query, identifiers, extensions.quote_ident, cur)
                 logger.info('Executing: {}'.format(name))
                 log_query(query, args, log_query_params)
                 try:
@@ -305,7 +305,7 @@ class QueryFnFactory:
                 if identifiers:  # pragma: no cover
                     if not quote_ident:
                         raise SQLpyException('"quote_ident" is not supported')
-                    query = format_query_identifiers(query, identifiers, quote_ident, cur)
+                    query = format_query_identifiers(query, identifiers, extensions.quote_ident, cur)
                 logger.info('Executing: {}'.format(name))
                 log_query(query, args, log_query_params)
                 try:
@@ -336,7 +336,7 @@ class QueryFnFactory:
                 if identifiers:  # pragma: no cover
                     if not quote_ident:
                         raise SQLpyException('"quote_ident" is not supported')
-                    query = format_query_identifiers(query, identifiers, quote_ident, cur)
+                    query = format_query_identifiers(query, identifiers, extensions.quote_ident, cur)
                 logger.info('Executing: {}'.format(name))
                 log_query(query, args, log_query_params)
                 try:
@@ -362,7 +362,7 @@ class QueryFnFactory:
                 if identifiers:  # pragma: no cover
                     if not quote_ident:
                         raise SQLpyException('"quote_ident" is not supported')
-                    query = format_query_identifiers(query, identifiers, quote_ident, cur)
+                    query = format_query_identifiers(query, identifiers, extensions.quote_ident, cur)
                 logger.info('Executing: {}'.format(name))
                 log_query(query, args, log_query_params)
                 try:
@@ -420,7 +420,7 @@ class QueryFnFactory:
                 if identifiers:  # pragma: no cover
                     if not quote_ident:
                         raise SQLpyException('"quote_ident" is not supported')
-                    query_built = format_query_identifiers(query_built, identifiers, quote_ident, cur)
+                    query_built = format_query_identifiers(query_built, identifiers, extensions.quote_ident, cur)
                 log_query(query_built, args, log_query_params)
                 try:
                     cur.execute(query_built, args)

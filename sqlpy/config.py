@@ -3,12 +3,11 @@ from enum import Enum
 #: Detect if psycopg2 driver is being used
 #: import quote_ident else set to None
 try:
-    from psycopg2.extensions import quote_ident as qi
+    from psycopg2.extensions import quote_ident
 except ImportError:  # pragma: no cover
     quote_ident = None
 else:
-    import psycopg2.extensions
-    quote_ident = psycopg2.extensions.quote_ident
+    import psycopg2.extensions as extensions
 
 #: Detect if psycopg2 driver is being used
 #: import execute_values else set to None
