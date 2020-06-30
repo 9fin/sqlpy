@@ -47,7 +47,7 @@ class Queries(object):
         LOG_QUERY_PARAMS = log_query_params
         for name, sql_type, fn in load_queries(filepath):
             self.add_query(name, fn)
-        logger.info('Found and loaded {} sql queires'.format(len(self.available_queries)))
+        logger.info('Found and loaded {} sql queries'.format(len(self.available_queries)))
 
     def __repr__(self):
         """
@@ -446,7 +446,7 @@ class QueryFnFactory:
         return fn_partial
 
 
-def parse_queires_string(s):
+def parse_queries_string(s):
     """Splits and processes SQL file into individual expressions"""
     return [parse_sql_entry(expression.strip('\n')) for expression in s.split('\n\n') if expression]
 
@@ -461,4 +461,4 @@ def load_queries(filepath):
             raise SQLLoadException('Could not find file', file)
         with open(file, 'rU') as queries_file:
             f = f + '\n\n' + queries_file.read().strip('\n')
-    return parse_queires_string(f)
+    return parse_queries_string(f)
