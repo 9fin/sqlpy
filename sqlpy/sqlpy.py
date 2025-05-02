@@ -459,6 +459,6 @@ def load_queries(filepath):
     for file in filepath:
         if not os.path.exists(file):
             raise SQLLoadException('Could not find file', file)
-        with open(file, 'rU') as queries_file:
+        with open(file, 'r') as queries_file:
             f = f + '\n\n' + queries_file.read().strip('\n')
     return parse_queires_string(f)
